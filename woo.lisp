@@ -120,17 +120,18 @@
                (when eat
                  (advance)))))
     ;; skip over whitespace
-    (loop while (or (null (lexer-ch lexer))
-                    (serapeum:whitespacep (lexer-ch lexer)))
+    (loop for current = (lexer-ch lexer)
+          while (or (null current) ; Initially, this holds true, but after that it is not needed.
+                    (serapeum:whitespacep current))
           do (advance))
     (let ((current (lexer-ch lexer)))
       ;; simple tokens first
       (alexandria:when-let (kind (gethash current *simple-tokens*))
         (return-from lexer-next
           (token kind (string current))))
-      (cond ((digit-char-p (lexer-ch lexer))
+      (cond ((digit-char-p current)
              (token :number (read-number) nil))
-            ((alpha-char-p (lexer-ch lexer))
+            ((alpha-char-p current)
              (let ((ident (read-identifier)))
                (token (lookup-identifier ident) ident nil)))
             (t nil)))))
