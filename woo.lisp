@@ -72,17 +72,21 @@
 (defun token/= (this that)
   (not (token= this that)))
 
+;; TODO: Honestly, this should be a struct.
 (defclass lexer ()
   ((text :initarg :text :reader lexer-text)
    (pos :initform 0 :reader lexer-pos)
    (rpos :initform 0 :reader lexer-rpos)
    (ch :initform nil :reader lexer-ch)))
 
+;; TODO: Yeah, it really should.
 (defun make-lexer (text)
   (make-instance 'lexer :text text))
 
 (defun lexer-next (lexer)
+  "Get the next token"
   (labels ((char-at (where)
+             "Return the character at RPOS otherwise the null character."
              (handler-case
                  (char (lexer-text lexer) where)
                (error (c)
@@ -94,8 +98,10 @@
                      pos rpos)
                (incf rpos)))
            (peek ()
+             "Return the character at RPOS without advancing."
              (char-at (lexer-rpos lexer)))
            (read-while (pred)
+             "Advance and collect the current character while PRED holds."
              (loop for ch = (lexer-ch lexer)
                    while (funcall pred ch)
                    do (advance)
@@ -105,9 +111,11 @@
              (read-while #'alphanumericp))
            (read-number ()
              (read-while #'digit-char-p))
+           ;; TODO: This should have a better name.
            (lookup-identifier (ident)
              (gethash ident *builtins* :identifier))
            (token (kind lit &optional (eat t))
+             "Return a token of KIND and LIT, and maybe EAT (advance)."
              (prog1 (make-token kind lit)
                (when eat
                  (advance)))))
