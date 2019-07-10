@@ -143,9 +143,9 @@
 
 (defun repl ()
   (loop
-    (let* ((text (read-line))
-           (lexer (make-lexer text)))
-      (loop for token = (lexer-next lexer)
-            while token
-            do (print token)
-            finally (fresh-line)))))
+    (let* ((text (read-line *query-io*))
+           (lexer (make-lexer text))
+           (tokens (loop for token = (lexer-next lexer)
+                         while token
+                         collect token)))
+      (format t "~{~A~&~}" tokens))))
