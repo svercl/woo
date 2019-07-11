@@ -76,6 +76,7 @@
                    finally (return (concatenate 'string chars))))
            (read-identifier ()
              (read-while #'alphanumericp))
+           ;; TODO: This doesn't handle hex or anything else.
            (read-number ()
              (read-while #'digit-char-p))
            ;; TODO: This should have a better name.
@@ -88,7 +89,7 @@
                  (advance)))))
     ;; skip over whitespace
     (loop for current = (lexer-ch lexer)
-          while (or (null current) ; Initially, this holds true, but after that it is not needed.
+          while (or (null current) ; only initially
                     (whitespacep current))
           do (advance))
     (let ((current (lexer-ch lexer)))

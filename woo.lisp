@@ -92,6 +92,7 @@
     (:return (parse-return-statement parser))
     (t (parse-expression-statement parser))))
 
+;; "let" IDENTIFIER "=" EXPRESSION ?";"
 (defun parse-let-statement (parser)
   (let ((current (parser-current parser)))
     (expect-peek parser :identifier)
@@ -102,6 +103,7 @@
         (optional-semicolon parser)
         (list :let-statement current name value)))))
 
+;; "return" EXPRESSION ?";"
 (defun parse-return-statement (parser)
   (let ((current (parser-current parser)))
     (next parser)
