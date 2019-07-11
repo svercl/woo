@@ -8,7 +8,9 @@
         "else" :else
         "do" :do
         "t" :t
-        "nil" :nil))
+        "nil" :nil
+        "let" :let
+        "return" :return))
 
 (defparameter *simple-tokens*
   (dict #\+ :plus
@@ -31,7 +33,8 @@
         #\: :colon
         #\' :quote
         #\; :semicolon
-        #\& :ampersand)
+        #\& :ampersand
+        #\# :hash)
   "single character tokens")
 
 (defclass lexer ()
