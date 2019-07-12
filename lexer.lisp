@@ -6,7 +6,6 @@
   (dict "fn" :fn
         "elif" :elif
         "else" :else
-        "do" :do
         "t" :t
         "nil" :nil
         "let" :let

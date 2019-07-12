@@ -27,4 +27,5 @@
   (loop
     (let* ((text (read-line))
            (parsed (parse-string text)))
-      (print parsed))))
+      (print parsed)
+      (fresh-line))))
