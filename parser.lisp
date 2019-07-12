@@ -58,9 +58,6 @@
 (defmethod current-kind= ((parser parser) kind)
   (eq (current-kind parser) kind))
 
-(defmethod current-token= ((parser parser) (token token))
-  (token= (parser-current parser) token))
-
 (defmethod current-kind/= ((parser parser) kind)
   (not (current-kind= parser kind)))
 
@@ -181,11 +178,11 @@
 
 (defun parse-boolean (parser)
   (let* ((token (parser-current parser))
-         (value (current-token= parser *t-token*)))
+         (value (current-kind/= parser :nil)))
     (list :boolean token value)))
 
 (defun parse-grouped-expression (parser)
-  (next parser)
+  (next parser) ; skip (
   (let ((expr (parse-expression parser)))
     (expect-peek parser :right-paren)
     expr))

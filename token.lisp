@@ -7,9 +7,6 @@
    (lit :initarg :lit :reader token-lit)
    (precedence :initarg :precedence :reader token-precedence)))
 
-(defparameter *t-token* (make-token :t "t"))
-(defparameter *nil-token* (make-token :nil "nil"))
-
 (defmethod print-object ((token token) stream)
   (print-unreadable-object (token stream)
     (format stream "~A: ~S" (token-kind token) (token-lit token))))
