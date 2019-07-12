@@ -34,7 +34,8 @@
 
 (defmethod print-object ((parser parser) stream)
   (print-unreadable-object (parser stream)
-    (format stream "(~A, ~A)"
+    (format stream "~A~%(~A, ~A)"
+            (parser-lexer parser)
             (parser-current parser)
             (parser-peek parser))))
 
@@ -117,7 +118,7 @@
 ;; "return" EXPRESSION ?";"
 (defun parse-return-statement (parser)
   (let ((token (parser-current parser)))
-    (next parser)
+    (next parser) ; skip "return"
     (let ((value (parse-expression parser)))
       (optional-semicolon parser)
       (list :return-statement token value))))
@@ -129,6 +130,7 @@
     (list :expression-statement token expr)))
 
 (defun prefix-parser-for (kind)
+  ;; implicit nil
   (case kind
     (:identifier #'parse-identifier)
     (:number #'parse-number-literal)
@@ -172,7 +174,7 @@
 (defun parse-prefix-expression (parser)
   (let* ((token (parser-current parser))
          (operator (token-lit token)))
-    (next parser)
+    (next parser) ; skip current (operator)
     (let ((right (parse-expression parser :prefix)))
       (list :prefix-expression token operator right))))
 
@@ -187,23 +189,24 @@
     (expect-peek parser :right-paren)
     expr))
 
+;; "if" "(" EXPRESSION ")" BLOCK ?( "else" BLOCK )
 (defun parse-if-expression (parser)
   (let ((token (parser-current parser)))
     (expect-peek parser :left-paren)
     (next parser)
     (let ((condition (parse-expression parser)))
       (expect-peek parser :right-paren)
-      (expect-peek parser :left-brace)
       (let ((consequence (parse-block-statement parser))
             (alternative))
         (when (peek-kind= parser :else)
-          (next parser)
-          (expect-peek parser :left-brace)
+          (next parser) ; skip "else"
           (setf alternative (parse-block-statement parser)))
         (list :if-expression token condition consequence alternative)))))
 
+;; "{" STATEMENT* "}"
 (defun parse-block-statement (parser)
   (let ((token (parser-current parser)))
+    (expect-peek parser :left-brace)
     (next parser)
     (loop while (current-kind/= parser :right-brace)
           for stmt = (parse-statement parser)
@@ -211,15 +214,17 @@
             collect stmt into stmts and do (next parser)
           finally (return (list :block token stmts)))))
 
+;; "fn" FN-PARAMS BLOCK
 (defun parse-fn-literal (parser)
-  (let ((token (parser-current parser)))
-    (expect-peek parser :left-paren)
-    (let ((parameters (parse-fn-parameters parser)))
-      (expect-peek parser :left-brace)
-      (let ((body (parse-block-statement parser)))
-        (list :fn-literal token parameters body)))))
+  (let* ((token (parser-current parser))
+         (parameters (parse-fn-parameters parser))
+         (body (parse-block-statement parser)))
+    (list :fn-literal token parameters body)))
 
+;; "(" ")"
+;; "(" ( IDENTIFIER ?"," )* ")"
 (defun parse-fn-parameters (parser)
+  (expect-peek parser :left-paren)
   (when (peek-kind= parser :right-paren)
     (next parser)
     (return-from parse-fn-parameters nil))

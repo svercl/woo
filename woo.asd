@@ -11,7 +11,8 @@
                (:file "woo")
                (:file "lexer")
                (:file "token")
-               (:file "parser")))
+               (:file "parser")
+               (:file "transform")))
 
 (asdf:defsystem :woo/tests
   :description "Tests for woo"

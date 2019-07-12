@@ -55,7 +55,7 @@
 (defmethod next ((lexer lexer))
   "Get the next token"
   (labels ((char-at (where)
-             "Return the character at RPOS otherwise the null character."
+             "Return the character at WHERE otherwise the null character."
              (handler-case
                  (char (lexer-text lexer) where)
                (error (c)
@@ -97,6 +97,7 @@
     (let ((current (lexer-ch lexer)))
       ;; simple tokens first
       (alexandria:when-let (kind (gethash current *simple-tokens*))
+        ;; get me outta here!
         (return-from next
           (token kind (string current))))
       (cond ((digit-char-p current)
@@ -104,4 +105,5 @@
             ((alpha-char-p current)
              (let ((ident (read-identifier)))
                (token (lookup-identifier ident) ident nil)))
+            ;; end-of-file or end-of-input, whatever
             (t nil)))))
