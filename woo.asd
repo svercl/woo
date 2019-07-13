@@ -1,6 +1,6 @@
 ;;;; woo.asd
 
-(asdf:defsystem :woo
+(defsystem "woo"
   :description "A programming language."
   :author "Brad Svercl <bradsvercl@gmail.com>"
   :license "MIT"
@@ -17,7 +17,7 @@
   :build-pathname "woo"
   :entry-point "woo::repl")
 
-(asdf:defsystem :woo/tests
+(defsystem "woo/tests"
   :description "Tests for woo."
   :author "Brad Svercl <bradsvercl@gmail.com>"
   :license "MIT"
