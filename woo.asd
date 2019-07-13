@@ -12,10 +12,13 @@
                (:file "lexer")
                (:file "token")
                (:file "parser")
-               (:file "transform")))
+               (:file "transform"))
+  :build-operation "program-op"
+  :build-pathname "woo"
+  :entry-point "woo::repl")
 
 (asdf:defsystem :woo/tests
-  :description "Tests for woo"
+  :description "Tests for woo."
   :author "Brad Svercl <bradsvercl@gmail.com>"
   :license "MIT"
   :serial t
