@@ -1,9 +1,7 @@
 # woo
-### _Your Name <your.name@example.com>_
 
-This is a project to do ... something.
+This is a basic programming language.
 
 ## License
 
-Specify license here
-
+MIT
