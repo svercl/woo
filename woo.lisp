@@ -11,7 +11,7 @@
 
 (defmethod lookup-symbol ((symtab symbol-table) sym)
   (if-let (outer (symtab-outer symtab))
-    (gethash sym (symtab-symbols outer))
+    (lookup-symbol outer sym)
     (gethash sym (symtab-symbols symtab))))
 
 (defmethod set-symbol ((symtab symbol-table) sym value)
