@@ -96,7 +96,7 @@
           do (advance))
     (let ((current (lexer-ch lexer)))
       ;; simple tokens first
-      (alexandria:when-let (kind (gethash current *simple-tokens*))
+      (when-let (kind (gethash current *simple-tokens*))
         ;; get me outta here!
         (return-from next
           (token kind (string current))))
