@@ -11,7 +11,7 @@
         :prefix 5
         :call 6))
 
-(defun precedence-number (precedence)
+(defun precedence-to-integer (precedence)
   (gethash precedence *precedences* 0))
 
 ;; TODO: Use a macro to transform into numerical form.
@@ -57,7 +57,7 @@
   (token-kind (parser-current parser)))
 
 (defmethod current-kind= ((parser parser) kind)
-  (eq (current-kind parser) kind))
+  (token-kind= (parser-current parser) kind))
 
 (defmethod current-kind/= ((parser parser) kind)
   (not (current-kind= parser kind)))
@@ -66,7 +66,7 @@
   (token-kind (parser-peek parser)))
 
 (defmethod peek-kind= ((parser parser) kind)
-  (eq (peek-kind parser) kind))
+  (token-kind= (parser-peek parser) kind))
 
 (defmethod peek-kind/= ((parser parser) kind)
   (not (peek-kind= parser kind)))
@@ -91,7 +91,7 @@
 
 (defun parse-program (parser)
   (loop for current = (parser-current parser)
-        while current
+        while (current-kind/= parser :eof)
         for stmt = (parse-statement parser)
         when stmt
           collect stmt into program
@@ -194,14 +194,14 @@
   (let ((token (parser-current parser)))
     (expect-peek parser :left-paren)
     (next parser)
-    (let ((condition (parse-expression parser)))
+    (let ((test (parse-expression parser)))
       (expect-peek parser :right-paren)
-      (let ((consequence (parse-block-statement parser))
-            (alternative))
+      (let ((conseq (parse-block-statement parser))
+            (alt))
         (when (peek-kind= parser :else)
           (next parser) ; skip "else"
-          (setf alternative (parse-block-statement parser)))
-        (list :if-expression token condition consequence alternative)))))
+          (setf alt (parse-block-statement parser)))
+        (list :if-expression token test conseq alt)))))
 
 ;; "{" STATEMENT* "}"
 (defun parse-block-statement (parser)
