@@ -27,17 +27,17 @@
         :left-paren :call))
 
 (defclass parser ()
-  ((lexer :initarg :lexer :reader parser-lexer)
-   (current :initform nil :reader parser-current)
-   (peek :initform nil :reader parser-peek))
+  ((lexer :initarg :lexer :reader lexer)
+   (current :initform nil :reader current)
+   (peek :initform nil :reader peek))
   (:documentation "Transforms tokens into an AST."))
 
 (defmethod print-object ((parser parser) stream)
   (print-unreadable-object (parser stream)
     (format stream "~A~%(~A, ~A)"
-            (parser-lexer parser)
-            (parser-current parser)
-            (parser-peek parser))))
+            (lexer parser)
+            (current parser)
+            (peek parser))))
 
 (defun make-parser (lexer)
   "Create a parser using LEXER."
@@ -54,19 +54,19 @@
 
 ;;; Shorthand methods.
 (defmethod current-kind ((parser parser))
-  (token-kind (parser-current parser)))
+  (token-kind (current parser)))
 
 (defmethod current-kind= ((parser parser) kind)
-  (token-kind= (parser-current parser) kind))
+  (token-kind= (current parser) kind))
 
 (defmethod current-kind/= ((parser parser) kind)
   (not (current-kind= parser kind)))
 
 (defmethod peek-kind ((parser parser))
-  (token-kind (parser-peek parser)))
+  (token-kind (peek parser)))
 
 (defmethod peek-kind= ((parser parser) kind)
-  (token-kind= (parser-peek parser) kind))
+  (token-kind= (peek parser) kind))
 
 (defmethod peek-kind/= ((parser parser) kind)
   (not (peek-kind= parser kind)))
@@ -80,17 +80,17 @@
       (error "Expected ~A but got ~A" kind (peek-kind parser))))
 
 (defmethod current-precedence ((parser parser))
-  (token-precedence (parser-current parser)))
+  (token-precedence (current parser)))
 
 (defmethod peek-precedence ((parser parser))
-  (token-precedence (parser-peek parser)))
+  (token-precedence (peek parser)))
 
 (defmethod optional-semicolon ((parser parser))
   (when (peek-kind= parser :semicolon)
     (next parser)))
 
 (defun parse-program (parser)
-  (loop for current = (parser-current parser)
+  (loop for current = (current parser)
         while (current-kind/= parser :eof)
         for stmt = (parse-statement parser)
         when stmt
@@ -106,7 +106,7 @@
 
 ;; "let" IDENTIFIER "=" EXPRESSION ?";"
 (defun parse-let-statement (parser)
-  (let ((token (parser-current parser)))
+  (let ((token (current parser)))
     (expect-peek parser :identifier)
     (let ((name (parse-identifier parser)))
       (expect-peek parser :assign)
@@ -117,14 +117,14 @@
 
 ;; "return" EXPRESSION ?";"
 (defun parse-return-statement (parser)
-  (let ((token (parser-current parser)))
+  (let ((token (current parser)))
     (next parser) ; skip "return"
     (let ((value (parse-expression parser)))
       (optional-semicolon parser)
       (list :return-statement token value))))
 
 (defun parse-expression-statement (parser)
-  (let* ((token (parser-current parser))
+  (let* ((token (current parser))
          (expr (parse-expression parser)))
     (optional-semicolon parser)
     (list :expression-statement token expr)))
@@ -151,7 +151,7 @@
                         (funcall prefix parser)
                         (return nil))
         ;; make precedence actually useful
-        with precedence-number = (precedence-number precedence)
+        with precedence-number = (precedence-to-integer precedence)
         for peek-precedence = (peek-precedence parser)
         while (and (peek-kind/= parser :semicolon)
                    (< precedence-number peek-precedence))
@@ -162,24 +162,24 @@
         finally (return expr)))
 
 (defun parse-identifier (parser)
-  (let* ((token (parser-current parser))
+  (let* ((token (current parser))
          (value (token-lit token)))
     (list :identifier token value)))
 
 (defun parse-number-literal (parser)
-  (let* ((token (parser-current parser))
+  (let* ((token (current parser))
          (value (parse-integer (token-lit token) :junk-allowed t)))
     (list :number-literal token value)))
 
 (defun parse-prefix-expression (parser)
-  (let* ((token (parser-current parser))
+  (let* ((token (current parser))
          (operator (token-lit token)))
     (next parser) ; skip current (operator)
     (let ((right (parse-expression parser :prefix)))
       (list :prefix-expression token operator right))))
 
 (defun parse-boolean (parser)
-  (let* ((token (parser-current parser))
+  (let* ((token (current parser))
          (value (current-kind/= parser :nil)))
     (list :boolean token value)))
 
@@ -189,9 +189,10 @@
     (expect-peek parser :right-paren)
     expr))
 
-;; "if" "(" EXPRESSION ")" BLOCK ?( "else" BLOCK )
+;; "if" "(" EXPRESSION ")" BLOCK
+;; "if" "(" EXPRESSION ")" BLOCK "else" BLOCK
 (defun parse-if-expression (parser)
-  (let ((token (parser-current parser)))
+  (let ((token (current parser)))
     (expect-peek parser :left-paren)
     (next parser)
     (let ((test (parse-expression parser)))
@@ -205,7 +206,7 @@
 
 ;; "{" STATEMENT* "}"
 (defun parse-block-statement (parser)
-  (let ((token (parser-current parser)))
+  (let ((token (current parser)))
     (expect-peek parser :left-brace)
     (next parser)
     (loop while (current-kind/= parser :right-brace)
@@ -216,7 +217,7 @@
 
 ;; "fn" FN-PARAMS BLOCK
 (defun parse-fn-literal (parser)
-  (let* ((token (parser-current parser))
+  (let* ((token (current parser))
          (parameters (parse-fn-parameters parser))
          (body (parse-block-statement parser)))
     (list :fn-literal token parameters body)))
@@ -225,6 +226,7 @@
 ;; "(" ( IDENTIFIER ?"," )* ")"
 (defun parse-fn-parameters (parser)
   (expect-peek parser :left-paren)
+  ;; no parameters
   (when (peek-kind= parser :right-paren)
     (next parser)
     (return-from parse-fn-parameters nil))
@@ -239,7 +241,7 @@
                   (return (cons identifier identifiers)))))
 
 (defun parse-infix-expression (parser left)
-  (let* ((token (parser-current parser))
+  (let* ((token (current parser))
          (operator (token-lit token))
          (precedence (token-precedence token)))
     (next parser)

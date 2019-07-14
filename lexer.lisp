@@ -11,6 +11,7 @@
         "let" :let
         "return" :return))
 
+;; TODO: Multi characater tokens like == /= && ||
 (defparameter *simple-tokens*
   (dict #\+ :plus
         #\- :minus
@@ -38,17 +39,17 @@
   "single character tokens")
 
 (defclass lexer ()
-  ((text :initarg :text :reader lexer-text)
-   (pos :initform 0 :reader lexer-pos)
-   (rpos :initform 0 :reader lexer-rpos)
-   (ch :initform nil :reader lexer-ch)))
+  ((text :initarg :text :reader text)
+   (pos :initform 0 :reader pos)
+   (rpos :initform 0 :reader rpos)
+   (ch :initform nil :reader ch)))
 
 (defmethod print-object ((lexer lexer) stream)
   (print-unreadable-object (lexer stream)
     (format stream "~A~%(~A,~A)"
-            (lexer-text lexer)
-            (lexer-pos lexer)
-            (lexer-ch lexer))))
+            (text lexer)
+            (pos lexer)
+            (ch lexer))))
 
 (defun make-lexer (text)
   (make-instance 'lexer :text text))
@@ -58,7 +59,7 @@
   (labels ((char-at (where)
              "Return the character at WHERE otherwise the null character."
              (handler-case
-                 (char (lexer-text lexer) where)
+                 (char (text lexer) where)
                (error (c)
                  (declare (ignore c))
                  #\Nul)))
@@ -69,13 +70,13 @@
                (incf rpos)))
            (peek ()
              "Return the character at RPOS without advancing."
-             (char-at (lexer-rpos lexer)))
+             (char-at (rpos lexer)))
            (read-while (pred)
              "Advance and collect the current character while PRED holds."
-             (loop for ch = (lexer-ch lexer)
-                   while (funcall pred ch)
+             (loop for current = (ch lexer)
+                   while (funcall pred current)
                    do (advance)
-                   collect ch into chars
+                   collect current into chars
                    finally (return (concatenate 'string chars))))
            (read-identifier ()
              (read-while #'alphanumericp))
@@ -91,11 +92,11 @@
                (when eat
                  (advance)))))
     ;; skip over whitespace
-    (loop for current = (lexer-ch lexer)
+    (loop for current = (ch lexer)
           while (or (null current) ; only initially
                     (whitespacep current))
           do (advance))
-    (let ((current (lexer-ch lexer)))
+    (let ((current (ch lexer)))
       ;; simple tokens first
       (when-let (kind (gethash current *simple-tokens*))
         ;; get me outta here!
