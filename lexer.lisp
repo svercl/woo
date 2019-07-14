@@ -33,7 +33,8 @@
         #\' :quote
         #\; :semicolon
         #\& :ampersand
-        #\# :hash)
+        #\# :hash
+        #\Nul :eof)
   "single character tokens")
 
 (defclass lexer ()
@@ -106,4 +107,4 @@
              (let ((ident (read-identifier)))
                (token (lookup-identifier ident) ident nil)))
             ;; end-of-file or end-of-input, whatever
-            (t nil)))))
+            (t (token :illegal "illegal"))))))
