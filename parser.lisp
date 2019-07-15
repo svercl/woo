@@ -90,8 +90,7 @@
     (next parser)))
 
 (defun parse-program (parser)
-  (loop :for current := (current parser)
-        :while (current-kind/= parser :eof)
+  (loop :while (current-kind/= parser :eof)
         :for stmt := (parse-statement parser)
         :when stmt
           :collect stmt :into program
@@ -208,7 +207,8 @@
   (let ((token (current parser)))
     (expect-peek parser :left-brace)
     (next parser)
-    (loop :while (current-kind/= parser :right-brace)
+    (loop :while (and (current-kind/= parser :right-brace)
+                      (current-kind/= parser :eof))
           :for stmt := (parse-statement parser)
           :when stmt
             :collect stmt :into stmts
