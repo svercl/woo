@@ -90,13 +90,13 @@
     (next parser)))
 
 (defun parse-program (parser)
-  (loop for current = (current parser)
-        while (current-kind/= parser :eof)
-        for stmt = (parse-statement parser)
-        when stmt
-          collect stmt into program
-        do (next parser)
-        finally (return program)))
+  (loop :for current := (current parser)
+        :while (current-kind/= parser :eof)
+        :for stmt := (parse-statement parser)
+        :when stmt
+          :collect stmt :into program
+        :do (next parser)
+        :finally (return program)))
 
 (defun parse-statement (parser)
   (case (current-kind parser)
@@ -146,20 +146,19 @@
   '(:plus :minus :star :slash :equal :not-equal :less-than :greater-than))
 
 (defun parse-expression (parser &optional (precedence :lowest))
-  (loop with prefix = (prefix-parser-for (current-kind parser))
-        with expr = (if prefix
-                        (funcall prefix parser)
-                        (return nil))
+  (loop :with prefix := (prefix-parser-for (current-kind parser))
+        :with expr = (if prefix
+                         (funcall prefix parser)
+                         (return nil))
         ;; make precedence actually useful
-        with precedence-number = (precedence-to-integer precedence)
-        for peek-precedence = (peek-precedence parser)
-        while (and (peek-kind/= parser :semicolon)
-                   (< precedence-number peek-precedence))
-        when (member (peek-kind parser) *infix-kinds*)
-          do (progn
-               (next parser) ; skip left hand side
-               (setf expr (parse-infix-expression parser expr)))
-        finally (return expr)))
+        :with precedence-number := (precedence-to-integer precedence)
+        :for peek-precedence := (peek-precedence parser)
+        :while (and (peek-kind/= parser :semicolon)
+                    (< precedence-number peek-precedence))
+        :when (find (peek-kind parser) *infix-kinds*)
+          :do (next parser)
+          :and :do (setf expr (parse-infix-expression parser expr))
+        :finally (return expr)))
 
 (defun parse-identifier (parser)
   (let* ((token (current parser))
@@ -209,11 +208,12 @@
   (let ((token (current parser)))
     (expect-peek parser :left-brace)
     (next parser)
-    (loop while (current-kind/= parser :right-brace)
-          for stmt = (parse-statement parser)
-          when stmt
-            collect stmt into stmts and do (next parser)
-          finally (return (list :block token stmts)))))
+    (loop :while (current-kind/= parser :right-brace)
+          :for stmt := (parse-statement parser)
+          :when stmt
+            :collect stmt :into stmts
+            :and :do (next parser)
+          :finally (return (list :block token stmts)))))
 
 ;; "fn" FN-PARAMS BLOCK
 (defun parse-fn-literal (parser)
@@ -231,14 +231,14 @@
     (next parser)
     (return-from parse-fn-parameters nil))
   (next parser)
-  (loop with identifier = (parse-identifier parser)
-        while (peek-kind= parser :comma)
-        ;repeat 2 do (next parser)
-        do (dotimes (x 2) (next parser))
-        collect (parse-identifier parser) into identifiers
-        finally (progn
-                  (expect-peek parser :right-paren)
-                  (return (cons identifier identifiers)))))
+  (loop :with identifier := (parse-identifier parser)
+        :while (peek-kind= parser :comma)
+        :do (next parser)
+        :do (next parser)
+        :collect (parse-identifier parser) :into identifiers
+        :finally (progn
+                   (expect-peek parser :right-paren)
+                   (return (cons identifier identifiers)))))
 
 (defun parse-infix-expression (parser left)
   (let* ((token (current parser))

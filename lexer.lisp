@@ -73,11 +73,11 @@
              (char-at (rpos lexer)))
            (read-while (pred)
              "Advance and collect the current character while PRED holds."
-             (loop for current = (ch lexer)
-                   while (funcall pred current)
-                   do (advance)
-                   collect current into chars
-                   finally (return (concatenate 'string chars))))
+             (loop :for current := (ch lexer)
+                   :while (funcall pred current)
+                   :do (advance)
+                   :collect current :into chars
+                   :finally (return (concatenate 'string chars))))
            (read-identifier ()
              (read-while #'alphanumericp))
            ;; TODO: This doesn't handle hex or anything else.
@@ -92,10 +92,10 @@
                (when eat
                  (advance)))))
     ;; skip over whitespace
-    (loop for current = (ch lexer)
-          while (or (null current) ; only initially
-                    (whitespacep current))
-          do (advance))
+    (loop :for current := (ch lexer)
+          :while (or (null current) ; only initially
+                     (whitespacep current))
+          :do (advance))
     (let ((current (ch lexer)))
       ;; simple tokens first
       (when-let (kind (gethash current *simple-tokens*))
