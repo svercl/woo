@@ -14,7 +14,7 @@
   (make-instance 'token :kind kind :lit lit))
 
 (defmethod token-precedence ((token token))
-  (precedence-to-integer (gethash (token-kind token) *token-precedence* 0)))
+  (gethash (token-kind token) *token-precedence* 0))
 
 (defmethod token= ((this token) (that token))
   (and (eq (token-kind this)

@@ -14,22 +14,28 @@
 (defun precedence-to-integer (precedence)
   (gethash precedence *precedences* 0))
 
-;; TODO: Use a macro to transform into numerical form.
+(defmacro precedence-hash-table (alist)
+  `(alist-hash-table
+    ',(loop :for (name . precedence) :in alist
+            :for number := (precedence-to-integer precedence)
+            :collect (cons name number))))
+
 (defparameter *token-precedence*
-  (dict :equal :lowest
-        :not-equal :lowest
-        :less-than :less-greater
-        :greater-than :less-greater
-        :plus :sum
-        :minus :sum
-        :star :product
-        :slash :product
-        :left-paren :call))
+  (precedence-dict ((:equal . :lowest)
+                    (:not-equal . :lowest)
+                    (:less-than . :less-greater)
+                    (:greater-than . :less-greater)
+                    (:plus . :sum)
+                    (:minus . :sum)
+                    (:star . :product)
+                    (:slash . :product)
+                    (:left-paren . :call))))
 
 (defclass parser ()
   ((lexer :initarg :lexer :reader lexer)
    (current :initform nil :reader current)
-   (peek :initform nil :reader peek))
+   (peek :initform nil :reader peek)
+   (errors :initform nil :reader errors))
   (:documentation "Transforms tokens into an AST."))
 
 (defmethod print-object ((parser parser) stream)
