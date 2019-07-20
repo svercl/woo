@@ -26,8 +26,8 @@
 (defmethod token= ((this token) (that token))
   (and (eq (token-kind this)
            (token-kind that))
-       (equal (token-lit this)
-              (token-lit that))))
+       (equal (token-literal this)
+              (token-literal that))))
 
 (defmethod token/= ((this token) (that token))
   (not (token= this that)))

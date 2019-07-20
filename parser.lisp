@@ -164,12 +164,13 @@
   (loop :with prefix := (prefix-parser-for (current-kind parser))
         :with expr = (if prefix
                          (funcall prefix parser)
+                         ;; TODO: Signal an error
                          (return nil))
-        ;; make precedence actually useful
         :with precedence-number := (precedence-to-integer precedence)
         :for peek-precedence := (peek-precedence parser)
-        :while (and (peek-kind/= parser :semicolon)
-                    (< precedence-number peek-precedence))
+        :for not-semicolon := (peek-kind/= parser :semicolon)
+        :for lower-precedence := (< precedence-number peek-precedence)
+        :while (and not-semicolon lower-precedence)
         :when (find (peek-kind parser) *infix-kinds*)
           :do (next parser)
           :and :do (setf expr (parse-infix-expression parser expr))
@@ -177,17 +178,17 @@
 
 (defun parse-identifier (parser)
   (let* ((token (current parser))
-         (value (token-lit token)))
+         (value (token-literal token)))
     (list :identifier token value)))
 
 (defun parse-number-literal (parser)
   (let* ((token (current parser))
-         (value (parse-integer (token-lit token) :junk-allowed t)))
+         (value (parse-integer (token-literal token) :junk-allowed t)))
     (list :number-literal token value)))
 
 (defun parse-prefix-expression (parser)
   (let* ((token (current parser))
-         (operator (token-lit token)))
+         (operator (token-literal token)))
     (next parser) ; skip current (operator)
     (let ((right (parse-expression parser :prefix)))
       (list :prefix-expression token operator right))))
@@ -258,7 +259,7 @@
 
 (defun parse-infix-expression (parser left)
   (let* ((token (current parser))
-         (operator (token-lit token))
+         (operator (token-literal token))
          (precedence (token-precedence token)))
     (next parser)
     (let ((right (parse-expression parser precedence)))
