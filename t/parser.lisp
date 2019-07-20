@@ -1,3 +1,3 @@
 ;;;; parser.lisp
 
-(in-package :woo/tests)
+(in-package :woo-test)

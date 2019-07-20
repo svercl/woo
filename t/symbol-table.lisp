@@ -1,6 +1,6 @@
 ;;;; symbol-table.lisp
 
-(in-package :woo/tests)
+(in-package :woo-test)
 
 (test lookup-symbols
   (let* ((inner (woo::make-symbol-table))

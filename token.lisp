@@ -3,15 +3,22 @@
 (in-package :woo)
 
 (defclass token ()
-  ((kind :initarg :kind :reader token-kind)
-   (lit :initarg :lit :reader token-lit)))
+  ((kind :reader token-kind
+         :initarg :kind
+         :type keyword)
+   (literal :reader token-literal
+        :initarg :literal
+        :type string)))
 
 (defmethod print-object ((token token) stream)
   (print-unreadable-object (token stream)
-    (format stream "~A: ~S" (token-kind token) (token-lit token))))
+    (format stream "~A: ~S"
+            (token-kind token)
+            (token-literal token))))
 
-(defun make-token (kind lit)
-  (make-instance 'token :kind kind :lit lit))
+(defun make-token (kind literal)
+  (make-instance 'token :kind kind
+                        :literal literal))
 
 (defmethod token-precedence ((token token))
   (gethash (token-kind token) *token-precedence* 0))

@@ -39,10 +39,19 @@
   "single character tokens")
 
 (defclass lexer ()
-  ((text :initarg :text :reader text)
-   (pos :initform 0 :reader pos)
-   (rpos :initform 0 :reader rpos)
-   (ch :initform nil :reader ch)))
+  ((text :reader text
+         :initarg :text
+         :type string)
+   (pos :reader pos
+        :initform 0
+        :type integer)
+   (rpos :accessor rpos
+         :initform 0
+         :type integer)
+   (ch :reader ch
+       :initform nil
+       :type (or null character)))
+  (:documentation "Transforms text into tokens."))
 
 (defmethod print-object ((lexer lexer) stream)
   (print-unreadable-object (lexer stream)
@@ -60,12 +69,12 @@
              "Return the character at WHERE otherwise the null character."
              (handler-case
                  (char (text lexer) where)
-               (error (c)
-                 (declare (ignore c))
+               (error (condition)
+                 (declare (ignore condition))
                  #\Nul)))
            (advance ()
              (with-slots (pos rpos ch) lexer
-               (setf ch (char-at rpos)
+               (setf ch (peek)
                      pos rpos)
                (incf rpos)))
            (peek ()
@@ -77,15 +86,19 @@
                    :while (funcall pred current)
                    :do (advance)
                    :collect current :into chars
-                   :finally (return (concatenate 'string chars))))
+                   :finally (return (coerce chars 'string))))
            (read-identifier ()
-             (read-while #'alphanumericp))
+             (flet ((valid (ch)
+                      (or (alphanumericp ch)
+                          (char= ch #\_))))
+               (read-while #'valid)))
            ;; TODO: This doesn't handle hex or anything else.
            (read-number ()
              (read-while #'digit-char-p))
            ;; TODO: This should have a better name.
            (lookup-identifier (ident)
              (gethash ident *builtins* :identifier))
+           ;; THIS MUST be the last form.
            (token (kind lit &optional (eat t))
              "Return a token of KIND and LIT, and maybe EAT (advance)."
              (prog1 (make-token kind lit)

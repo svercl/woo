@@ -14,6 +14,7 @@
 (defun precedence-to-integer (precedence)
   (gethash precedence *precedences* 0))
 
+;; TODO: This macro doesn't work at compile time apparently.
 (defmacro precedence-hash-table (alist)
   `(alist-hash-table
     ',(loop :for (name . precedence) :in alist
@@ -32,10 +33,19 @@
                           (:left-paren . :call))))
 
 (defclass parser ()
-  ((lexer :initarg :lexer :reader lexer)
-   (current :initform nil :reader current)
-   (peek :initform nil :reader peek)
-   (errors :initform nil :reader errors))
+  ((lexer :reader lexer
+          :initarg :lexer
+          :type lexer
+          :documentation "The token producer.")
+   (current :reader current
+            :initarg :current
+            :type (or null token))
+   (peek :reader peek
+         :initform nil
+         :type (or null token))
+   (errors :reader errors
+           :initform nil
+           :type (or null list)))
   (:documentation "Transforms tokens into an AST."))
 
 (defmethod print-object ((parser parser) stream)

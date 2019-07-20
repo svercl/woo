@@ -1,4 +1,4 @@
 ;;;; package.lisp
 
-(defpackage :woo
+(defpackage woo
   (:use :cl :alexandria :serapeum))
