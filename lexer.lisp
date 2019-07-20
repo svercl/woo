@@ -3,60 +3,60 @@
 (in-package :woo)
 
 (defparameter *builtins*
-  (dict "fn" :fn
-        "elif" :elif
-        "else" :else
-        "t" :t
-        "nil" :nil
-        "let" :let
-        "return" :return))
+  (alist-hash-table '(("fn" . :fn)
+                      ("elif" . :elif)
+                      ("else" . :else)
+                      ("t" . :t)
+                      ("nil" . :nil)
+                      ("let" . :let)
+                      ("return" . :return))))
 
 ;; TODO: Multi characater tokens like == /= && ||
 (defparameter *simple-tokens*
-  (dict #\+ :plus
-        #\- :minus
-        #\* :star
-        #\/ :slash
-        #\= :assign
-        #\! :bang
-        #\< :less-than
-        #\> :greater-than
-        #\( :left-paren
-        #\) :right-paren
-        #\{ :left-brace
-        #\} :right-brace
-        #\[ :left-bracket
-        #\] :right-bracket
-        #\% :percent
-        #\^ :caret
-        #\~ :tilde
-        #\: :colon
-        #\' :quote
-        #\; :semicolon
-        #\& :ampersand
-        #\# :hash
-        #\Nul :eof)
+  (alist-hash-table '((#\+ . :plus)
+                      (#\- . :minus)
+                      (#\* . :star)
+                      (#\/ . :slash)
+                      (#\= . :assign)
+                      (#\! . :bang)
+                      (#\< . :less-than)
+                      (#\> . :greater-than)
+                      (#\( . :left-paren)
+                      (#\) . :right-paren)
+                      (#\{ . :left-brace)
+                      (#\} . :right-brace)
+                      (#\[ . :left-bracket)
+                      (#\] . :right-bracket)
+                      (#\% . :percent)
+                      (#\^ . :caret)
+                      (#\~ . :tilde)
+                      (#\: . :colon)
+                      (#\' . :quote)
+                      (#\; . :semicolon)
+                      (#\& . :ampersand)
+                      (#\# . :hash)
+                      (#\Nul . :eof)))
   "single character tokens")
 
 (defclass lexer ()
-  ((text :reader text
+  ((text :reader lexer-text
          :initarg :text
          :type string)
-   (pos :reader pos
-        :initform 0
-        :type integer)
-   (rpos :accessor rpos
-         :initform 0
-         :type integer)
-   (ch :reader ch
-       :initform nil
-       :type (or null character)))
+   (position :reader lexer-position
+             :initform 0
+             :type integer)
+   (read-position :accessor lexer-read-position
+                  :initform 0
+                  :type integer)
+   (current :reader lexer-current
+            :initform nil
+            :type (or null character)))
   (:documentation "Transforms text into tokens."))
 
 (defmethod print-object ((lexer lexer) stream)
   (print-unreadable-object (lexer stream)
-    (with-slots (text pos ch) lexer
-      (format stream "~A~%(~A,~A)" text pos ch))))
+    (with-slots (text position current) lexer
+      (format stream "~A~%(~A,~A)" text position current))))
 
 (defun make-lexer (text)
   (make-instance 'lexer :text text))
@@ -66,29 +66,29 @@
   (labels ((char-at (where)
              "Return the character at WHERE otherwise the null character."
              (handler-case
-                 (char (text lexer) where)
+                 (char (lexer-text lexer) where)
                (error (condition)
                  (declare (ignore condition))
                  #\Nul)))
            (advance ()
-             (with-slots (pos rpos ch) lexer
-               (setf ch (peek)
-                     pos rpos)
-               (incf rpos)))
+             (with-slots (position read-position current) lexer
+               (setf current (peek)
+                     position read-position)
+               (incf read-position)))
            (peek ()
              "Return the character at RPOS without advancing."
-             (char-at (rpos lexer)))
+             (char-at (lexer-read-position lexer)))
            (read-while (pred)
              "Advance and collect the current character while PRED holds."
-             (loop :for current := (ch lexer)
-                   :while (funcall pred current)
+             (loop :for char := (lexer-current lexer)
+                   :while (funcall pred char)
                    :do (advance)
-                   :collect current :into chars
+                   :collect char :into chars
                    :finally (return (coerce chars 'string))))
            (read-identifier ()
-             (flet ((valid (ch)
-                      (or (alphanumericp ch)
-                          (char= ch #\_))))
+             (flet ((valid (char)
+                      (or (alphanumericp char)
+                          (char= char #\_))))
                (read-while #'valid)))
            ;; TODO: This doesn't handle hex or anything else.
            (read-number ()
@@ -103,11 +103,11 @@
                (when eat
                  (advance)))))
     ;; skip over whitespace
-    (loop :for current := (ch lexer)
-          :while (or (null current) ; only initially
-                     (whitespacep current))
+    (loop :for char := (lexer-current lexer)
+          :while (or (null char) ; only initially
+                     (whitespacep char))
           :do (advance))
-    (let ((current (ch lexer)))
+    (let ((current (lexer-current lexer)))
       ;; simple tokens first
       (when-let (kind (gethash current *simple-tokens*))
         ;; get me outta here!

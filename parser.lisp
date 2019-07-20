@@ -3,23 +3,22 @@
 (in-package :woo)
 
 (defparameter *precedences*
-  (dict :lowest 0
-        :equals 1
-        :less-greater 2
-        :sum 3
-        :product 4
-        :prefix 5
-        :call 6))
+  (alist-hash-table '((:lowest . 0)
+                      (:equals . 1)
+                      (:less-greater . 2)
+                      (:sum . 3)
+                      (:product . 4)
+                      (:prefix . 5)
+                      (:call . 6))))
 
 (defun precedence-to-integer (precedence)
   (gethash precedence *precedences* 0))
 
 ;; TODO: This macro doesn't work at compile time apparently.
 (defmacro precedence-hash-table (alist)
-  `(alist-hash-table
-    ',(loop :for (name . precedence) :in alist
-            :for number := (precedence-to-integer precedence)
-            :collect (cons name number))))
+  `(alist-hash-table ',(loop :for (name . precedence) :in alist
+                             :for number := (precedence-to-integer precedence)
+                             :collect (cons name number))))
 
 (defparameter *token-precedence*
   (precedence-hash-table ((:equal . :lowest)
