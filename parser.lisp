@@ -210,22 +210,23 @@
   (let ((token (current parser)))
     (expect-peek parser :left-paren)
     (next parser)
-    (let ((test (parse-expression parser)))
+    (let ((condition (parse-expression parser)))
       (expect-peek parser :right-paren)
-      (let ((conseq (parse-block-statement parser))
-            (alt))
+      (let ((consequence (parse-block-statement parser))
+            (alternative))
         (when (peek-kind= parser :else)
           (next parser) ; skip "else"
-          (setf alt (parse-block-statement parser)))
-        (list :if-expression token test conseq alt)))))
+          (setf alternative (parse-block-statement parser)))
+        (list :if-expression token condition consequence alternative)))))
 
 ;; "{" STATEMENT* "}"
 (defun parse-block-statement (parser)
   (let ((token (current parser)))
     (expect-peek parser :left-brace)
     (next parser)
-    (loop :while (and (current-kind/= parser :right-brace)
-                      (current-kind/= parser :eof))
+    (loop :for not-right-brace := (current-kind/= parser :right-brace)
+          :for not-eof := (current-kind/= parser :eof)
+          :while (and not-right-brace not-eof)
           :for stmt := (parse-statement parser)
           :when stmt
             :collect stmt :into stmts
@@ -250,6 +251,7 @@
   (next parser)
   (loop :with identifier := (parse-identifier parser)
         :while (peek-kind= parser :comma)
+        ;; dotimes?
         :do (next parser)
         :do (next parser)
         :collect (parse-identifier parser) :into identifiers
@@ -260,6 +262,7 @@
 (defun parse-infix-expression (parser left)
   (let* ((token (current parser))
          (operator (token-literal token))
+
          (precedence (token-precedence token)))
     (next parser)
     (let ((right (parse-expression parser precedence)))
