@@ -17,14 +17,3 @@
   :build-operation "program-op"
   :build-pathname "woo"
   :entry-point "woo::repl")
-
-(defsystem woo-test
-  :author "Brad Svercl <bradsvercl@gmail.com>"
-  :license "MIT"
-  :serial t
-  :depends-on (:woo :fiveam)
-  :pathname "t/"
-  :components ((:file "package")
-               (:file "symbol-table")
-               (:file "lexer")
-               (:file "parser")))
