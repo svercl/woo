@@ -50,10 +50,8 @@
 
 (defmethod print-object ((parser parser) stream)
   (print-unreadable-object (parser stream)
-    (format stream "~A~%(~A, ~A)"
-            (lexer parser)
-            (current parser)
-            (peek parser))))
+    (with-slots (lexer current peek) parser
+      (format stream "~A~%(~A, ~A)" lexer current peek))))
 
 (defun make-parser (lexer)
   "Create a parser using LEXER."

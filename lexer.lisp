@@ -55,10 +55,8 @@
 
 (defmethod print-object ((lexer lexer) stream)
   (print-unreadable-object (lexer stream)
-    (format stream "~A~%(~A,~A)"
-            (text lexer)
-            (pos lexer)
-            (ch lexer))))
+    (with-slots (text pos ch) lexer
+      (format stream "~A~%(~A,~A)" text pos ch))))
 
 (defun make-lexer (text)
   (make-instance 'lexer :text text))
