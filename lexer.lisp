@@ -3,13 +3,14 @@
 (in-package :woo)
 
 (defparameter *builtins*
-  (alist-hash-table '(("fn" . :fn)
+  (alist-hash-table '(("fn" . :function)
                       ("elif" . :elif)
                       ("else" . :else)
                       ("t" . :t)
                       ("nil" . :nil)
                       ("let" . :let)
-                      ("return" . :return))))
+                      ("return" . :return))
+                    :test #'equal))
 
 ;; TODO: Multi characater tokens like == /= && ||
 (defparameter *simple-tokens*

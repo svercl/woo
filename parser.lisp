@@ -108,7 +108,7 @@
         :when stmt
           :collect stmt :into program
         :do (next parser)
-        :finally (return program)))
+        :finally (return (list :program program))))
 
 (defun parse-statement (parser)
   (case (current-kind parser)
@@ -150,7 +150,7 @@
     ((:t :nil) #'parse-boolean)
     (:left-paren #'parse-grouped-expression)
     (:if #'parse-if-expression)
-    (:fn #'parse-fn-literal)))
+    (:function #'parse-function-literal)))
 
 ;; TODO: This doesn't work for :left-paren which needs to call a different function.
 ;; NOTE: We can probably handle this specifically, or handle it as above.
@@ -181,7 +181,7 @@
 (defun parse-number-literal (parser)
   (let* ((token (current parser))
          (value (parse-integer (token-literal token) :junk-allowed t)))
-    (list :number-literal token value)))
+    (list :integer-literal token value)))
 
 (defun parse-prefix-expression (parser)
   (let* ((token (current parser))
@@ -193,7 +193,7 @@
 (defun parse-boolean (parser)
   (let* ((token (current parser))
          (value (current-kind/= parser :nil)))
-    (list :boolean token value)))
+    (list :boolean-literal token value)))
 
 (defun parse-grouped-expression (parser)
   (next parser) ; skip (
@@ -228,23 +228,23 @@
           :when stmt
             :collect stmt :into stmts
             :and :do (next parser)
-          :finally (return (list :block token stmts)))))
+          :finally (return (list :block-statement token stmts)))))
 
 ;; "fn" FN-PARAMS BLOCK
-(defun parse-fn-literal (parser)
+(defun parse-function-literal (parser)
   (let* ((token (current parser))
-         (parameters (parse-fn-parameters parser))
+         (parameters (parse-function-parameters parser))
          (body (parse-block-statement parser)))
-    (list :fn-literal token parameters body)))
+    (list :function-literal token parameters body)))
 
 ;; "(" ")"
 ;; "(" ( IDENTIFIER ?"," )* ")"
-(defun parse-fn-parameters (parser)
+(defun parse-function-parameters (parser)
   (expect-peek parser :left-paren)
   ;; no parameters
   (when (peek-kind= parser :right-paren)
     (next parser)
-    (return-from parse-fn-parameters nil))
+    (return-from parse-function-parameters nil))
   (next parser)
   (loop :with identifier := (parse-identifier parser)
         :while (peek-kind= parser :comma)
@@ -259,7 +259,6 @@
 (defun parse-infix-expression (parser left)
   (let* ((token (current parser))
          (operator (token-literal token))
-
          (precedence (token-precedence token)))
     (next parser)
     (let ((right (parse-expression parser precedence)))
