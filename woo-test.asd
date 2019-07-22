@@ -7,6 +7,6 @@
   :depends-on (:woo :fiveam)
   :pathname "t/"
   :components ((:file "package")
-               (:file "symbol-table")
+               (:file "environment")
                (:file "lexer")
                (:file "parser")))

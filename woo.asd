@@ -12,8 +12,8 @@
                (:file "lexer")
                (:file "token")
                (:file "parser")
-               (:file "transform")
-               (:file "symbol-table"))
+               (:file "environment")
+               (:file "evaluator"))
   :build-operation "program-op"
   :build-pathname "woo"
   :entry-point "woo::repl")
