@@ -5,7 +5,7 @@
 (defparameter *precedences*
   (alist-hash-table '((:lowest . 0)
                       (:equals . 1)
-                      (:less-greater . 2)
+                      (:comparison . 2)
                       (:sum . 3)
                       (:product . 4)
                       (:prefix . 5)
@@ -15,21 +15,24 @@
   (gethash precedence *precedences* 0))
 
 ;; TODO: This macro doesn't work at compile time apparently.
-(defmacro precedence-hash-table (alist)
-  `(alist-hash-table ',(loop :for (name . precedence) :in alist
-                             :for number := (precedence-to-integer precedence)
-                             :collect (cons name number))))
+(defun precedence-hash-table (alist &key (test #'eq))
+  (let ((table (loop :for (name . precedence) :in alist
+                     :for number := (precedence-to-integer precedence)
+                     :collect (cons name number))))
+    (alist-hash-table table :test test)))
 
 (defparameter *token-precedence*
-  (precedence-hash-table ((:equal . :equals)
-                          (:not-equal . :equals)
-                          (:less-than . :less-greater)
-                          (:greater-than . :less-greater)
-                          (:plus . :sum)
-                          (:minus . :sum)
-                          (:star . :product)
-                          (:slash . :product)
-                          (:left-paren . :call))))
+  (precedence-hash-table '((:equal . :equals)
+                           (:not-equal . :equals)
+                           (:less-than . :comparison)
+                           (:less-equal . :comparison)
+                           (:greater-than . :comparison)
+                           (:greater-equal . :comarison)
+                           (:plus . :sum)
+                           (:minus . :sum)
+                           (:star . :product)
+                           (:slash . :product)
+                           (:left-paren . :call))))
 
 (defclass parser ()
   ((lexer :reader lexer
@@ -50,7 +53,7 @@
 (defmethod print-object ((parser parser) stream)
   (print-unreadable-object (parser stream)
     (with-slots (lexer current peek) parser
-      (format stream "~A~%(~A, ~A)" lexer current peek))))
+      (format stream "~A (~A, ~A)" lexer current peek))))
 
 (defun make-parser (lexer)
   "Create a parser using LEXER."
@@ -147,7 +150,7 @@
     (:identifier #'parse-identifier)
     (:number #'parse-number-literal)
     ((:bang :minus) #'parse-prefix-expression)
-    ((:t :nil) #'parse-boolean)
+    ((:t :nil) #'parse-boolean-literal)
     (:left-paren #'parse-grouped-expression)
     (:if #'parse-if-expression)
     (:function #'parse-function-literal)))
@@ -155,7 +158,7 @@
 ;; TODO: This doesn't work for :left-paren which needs to call a different function.
 ;; NOTE: We can probably handle this specifically, or handle it as above.
 (defparameter *infix-kinds*
-  '(:plus :minus :star :slash :equal :not-equal :less-than :greater-than))
+  '(:plus :minus :star :slash :equal :not-equal :less-than :greater-than :left-paren))
 
 (defun parse-expression (parser &optional (precedence :lowest))
   (loop :with prefix := (prefix-parser-for (current-kind parser))
@@ -165,12 +168,13 @@
                          (return nil))
         :with precedence-number := (precedence-to-integer precedence)
         :for peek-precedence := (peek-precedence parser)
-        :for not-semicolon := (peek-kind/= parser :semicolon)
-        :for lower-precedence := (< precedence-number peek-precedence)
-        :while (and not-semicolon lower-precedence)
+        :for not-semicolon-p := (peek-kind/= parser :semicolon)
+        :for lower-precedence-p := (< precedence-number peek-precedence)
+        :while (and not-semicolon-p lower-precedence-p)
         :when (find (peek-kind parser) *infix-kinds*)
           :do (next parser)
           :and :do (setf expr (parse-infix-expression parser expr))
+                   ;; TODO: ???
         :finally (return expr)))
 
 (defun parse-identifier (parser)
@@ -190,7 +194,7 @@
     (let ((right (parse-expression parser :prefix)))
       (list :prefix-expression token operator right))))
 
-(defun parse-boolean (parser)
+(defun parse-boolean-literal (parser)
   (let* ((token (current parser))
          (value (current-kind/= parser :nil)))
     (list :boolean-literal token value)))
@@ -224,11 +228,11 @@
     (loop :for not-right-brace := (current-kind/= parser :right-brace)
           :for not-eof := (current-kind/= parser :eof)
           :while (and not-right-brace not-eof)
-          :for stmt := (parse-statement parser)
-          :when stmt
-            :collect stmt :into stmts
+          :for statement := (parse-statement parser)
+          :when statement
+            :collect statement :into statements
             :and :do (next parser)
-          :finally (return (list :block-statement token stmts)))))
+          :finally (return (list :block-statement token statements)))))
 
 ;; "fn" FN-PARAMS BLOCK
 (defun parse-function-literal (parser)
