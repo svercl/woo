@@ -35,17 +35,17 @@
                            (:left-paren . :call))))
 
 (defclass parser ()
-  ((lexer :reader lexer
+  ((lexer :accessor lexer
           :initarg :lexer
           :type lexer
           :documentation "The token producer.")
-   (current :reader current
+   (current :accessor current
             :initarg :current
             :type (or null token))
-   (peek :reader peek
+   (peek :accessor peek
          :initform nil
          :type (or null token))
-   (errors :reader errors
+   (errors :accessor errors
            :initform nil
            :type (or null list)))
   (:documentation "Transforms tokens into an AST."))
@@ -64,9 +64,8 @@
 
 (defmethod next ((parser parser))
   "Advance the PARSER."
-  (with-slots (lexer current peek) parser
-    (setf current peek
-          peek (next lexer))))
+  (setf (current parser) (peek parser)
+        (peek parser) (next (lexer parser))))
 
 ;;; Shorthand methods.
 (defmethod current-kind ((parser parser))

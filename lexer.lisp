@@ -50,13 +50,13 @@
   ((text :reader lexer-text
          :initarg :text
          :type string)
-   (position :reader lexer-position
+   (position :accessor lexer-position
              :initform 0
              :type integer)
    (read-position :accessor lexer-read-position
                   :initform 0
                   :type integer)
-   (current :reader lexer-current
+   (current :accessor lexer-current
             :initform nil
             :type (or null character)))
   (:documentation "Transforms text into tokens."))
@@ -79,10 +79,9 @@
                  (declare (ignore condition))
                  #\Nul)))
            (advance ()
-             (with-slots (position read-position current) lexer
-               (setf current (peek)
-                     position read-position)
-               (incf read-position)))
+             (setf (lexer-current lexer) (peek)
+                   (lexer-position lexer) (lexer-read-position lexer))
+             (incf (lexer-read-position lexer)))
            (peek ()
              "Return the character at RPOS without advancing."
              (char-at (lexer-read-position lexer)))
