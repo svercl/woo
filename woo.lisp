@@ -10,7 +10,7 @@
 
 (defun repl ()
   (loop (princ ">> ")
-        (force-output)
         (let* ((text (read-line))
                (parsed (parse-string text)))
-          (pprint parsed))))
+          (pprint parsed)
+          (fresh-line))))
