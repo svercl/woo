@@ -39,6 +39,13 @@
                       (#\Nul . :eof)))
   "single character tokens")
 
+(defparameter *two-char-tokens*
+  (alist-hash-table '(("==" . :equals)
+                      ("!=" . :not-equals)
+                      ("<=" . :less-equal)
+                      (">=" . :greater-equal))
+                    :test #'equal))
+
 (defclass lexer ()
   ((text :reader lexer-text
          :initarg :text
@@ -108,13 +115,16 @@
           :while (or (null char) ; only initially
                      (whitespacep char))
           :do (advance))
-    (let ((current (lexer-current lexer)))
-      ;; simple tokens first
-      (when-let (kind (gethash current *simple-tokens*))
-        ;; get me outta here!
-        (return-from next
-          (token kind (string current))))
-      (cond ((digit-char-p current)
+    (let* ((current (lexer-current lexer))
+           (simple (gethash current *simple-tokens*))
+           (both (concatenate 'string (string current) (string (peek))))
+           (two-char (gethash both *two-char-tokens*)))
+      (cond ((or two-char simple)
+             (if two-char
+                 (prog1 (token two-char both)
+                   (advance))
+                 (token simple (string current))))
+            ((digit-char-p current)
              (token :number (read-number) nil))
             ((alpha-char-p current)
              (let ((ident (read-identifier)))
