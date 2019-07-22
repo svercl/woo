@@ -79,9 +79,13 @@
                  (declare (ignore condition))
                  #\Nul)))
            (advance ()
-             (setf (lexer-current lexer) (peek)
-                   (lexer-position lexer) (lexer-read-position lexer))
-             (incf (lexer-read-position lexer)))
+             (with-accessors ((current lexer-current)
+                              (position lexer-position)
+                              (read-position lexer-read-position))
+                 lexer
+               (setf current (peek)
+                     position read-position)
+               (incf read-position)))
            (peek ()
              "Return the character at RPOS without advancing."
              (char-at (lexer-read-position lexer)))
