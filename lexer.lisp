@@ -40,8 +40,8 @@
   "single character tokens")
 
 (defparameter *two-char-tokens*
-  (alist-hash-table '(("==" . :equals)
-                      ("!=" . :not-equals)
+  (alist-hash-table '(("==" . :equal)
+                      ("!=" . :not-equal)
                       ("<=" . :less-equal)
                       (">=" . :greater-equal))
                     :test #'equal))
