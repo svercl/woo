@@ -21,8 +21,8 @@
                              :collect (cons name number))))
 
 (defparameter *token-precedence*
-  (precedence-hash-table ((:equal . :lowest)
-                          (:not-equal . :lowest)
+  (precedence-hash-table ((:equal . :equals)
+                          (:not-equal . :equals)
                           (:less-than . :less-greater)
                           (:greater-than . :less-greater)
                           (:plus . :sum)
