@@ -9,9 +9,8 @@
     program))
 
 (defun repl ()
-  (loop
-   (princ ">> ")
-   (force-output)
-    (let* ((text (read-line))
-           (parsed (parse-string text)))
-      (format t "~&~{~S~}~&" parsed))))
+  (loop (princ ">> ")
+        (force-output)
+        (let* ((text (read-line))
+               (parsed (parse-string text)))
+          (pprint parsed))))
