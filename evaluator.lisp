@@ -142,11 +142,12 @@
         :collect evaluated :into result
         :finally (return result)))
 
-(defun %extend-function-environment (function arguments)
-  (loop :with environment := (make-symbol-table (third function))
+(defun %extend-function-environment (fun arguments)
+  (loop :with environment := (make-environment (third fun))
+        :with parameters := (second fun)
         :for argument :in arguments
-        :for parameter :in (second function)
-        :do (set-symbol environment parameter argument)
+        :for parameter :in parameters
+        :do (set-in environment parameter argument)
         :finally (return environment)))
 
 (defun %unwrap-return-value (o)
