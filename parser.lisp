@@ -3,16 +3,10 @@
 (in-package :woo)
 
 (defparameter *precedences*
-  (alist-hash-table '((:lowest . 0)
-                      (:equals . 1)
-                      (:comparison . 2)
-                      (:sum . 3)
-                      (:product . 4)
-                      (:prefix . 5)
-                      (:call . 6))))
+  '(:lowest :equals :comparison :sum :product :prefix :call))
 
 (defun precedence-to-integer (precedence)
-  (gethash precedence *precedences* 0))
+  (or (position precedence *precedences*) 0))
 
 ;; TODO: This macro doesn't work at compile time apparently.
 (defun precedence-hash-table (alist &key (test #'eq))
