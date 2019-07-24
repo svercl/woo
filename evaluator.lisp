@@ -2,8 +2,11 @@
 
 (in-package :woo)
 
+(defun node-kind (node)
+  (first node))
+
 (defun inspect-object (node)
-  (case (first node)
+  (case (node-kind node)
     ((:integer :boolean) (write-to-string (second node)))
     (:null "null")
     (:return-value (inspect-object (second node)))
@@ -13,9 +16,6 @@
 (defparameter +true-object+ '(:boolean t))
 (defparameter +false-object+ '(:boolean nil))
 (defparameter +null-object+ '(:null))
-
-(defun node-kind (node)
-  (first node))
 
 (defun evaluate (node env)
   (case (node-kind node)
@@ -42,7 +42,7 @@
 (defun evaluate-block-statement (node env)
   (loop :for statement :in (third node)
         :for result := (evaluate statement env)
-        :for kind := (first result)
+        :for kind := (node-kind result)
         :for return-value-p := (eq kind :return-value)
         :for errorp := (eq kind :error)
         :when (or return-value-p errorp)
@@ -77,8 +77,8 @@
   (let ((value (second right)))
     (list :integer (- value))))
 
-(defun %from-native (b)
-  (if b +true-object+ +false-object+))
+(defun %from-native (test)
+  (if test +true-object+ +false-object+))
 
 (defun %truthyp (node)
   (case (node-kind node)
@@ -87,7 +87,7 @@
     (t t)))
 
 (defun node-kind= (node kind)
-  (eq (first node) kind))
+  (eq (node-kind node) kind))
 
 (defun %both-equal-to (left right kind)
   (and (node-kind= left kind)
@@ -103,7 +103,7 @@
           ("==" (%from-native (equal left right)))
           ("!=" (%from-native (not (equal left right))))
           (t (error "Unknown operator ~A ~A ~A"
-                    (first left) operator (first right)))))))
+                    (node-kind left) operator (node-kind right)))))))
 
 (defun %evaluate-integer-infix-expression (operator left right)
   (let ((left-value (second left))
