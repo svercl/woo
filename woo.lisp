@@ -21,5 +21,6 @@
                (parsed (parse-string text))
                (env (make-environment))
                (evaluated (evaluate parsed env)))
-          (princ (inspect-object evaluated))
+          (when evaluated
+            (princ (inspect-object evaluated)))
           (terpri))))

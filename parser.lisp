@@ -165,7 +165,9 @@
                          (funcall prefix parser)
                          ;; TODO: Signal an error
                          (return nil))
-        :with precedence-number := (precedence-to-integer precedence)
+        :with precedence-number := (if (keywordp precedence)
+                                       (precedence-to-integer precedence)
+                                       precedence)
         :for peek-precedence := (peek-precedence parser)
         :for not-semicolon-p := (peek-kind/= parser :semicolon)
         :for lower-precedence-p := (< precedence-number peek-precedence)
@@ -173,7 +175,6 @@
         :when (find (peek-kind parser) *infix-kinds*)
           :do (next parser)
           :and :do (setf expr (parse-infix-expression parser expr))
-                   ;; TODO: ???
         :finally (return expr)))
 
 (defun parse-identifier (parser)
