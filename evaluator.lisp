@@ -30,8 +30,7 @@
     (:infix-expression (evaluate-infix-expression node env))
     (:if-expression (evaluate-if-expression node env))
     (:identifier (evaluate-identifier node env))
-    (:function-literal (evaluate-function-literal node env))
-    (t (error "Unknown ~A" (first node)))))
+    (:function-literal (evaluate-function-literal node env))))
 
 (defun evaluate-program (node env)
   (loop :for statement :in (second node)
@@ -105,7 +104,6 @@
 (defun %evaluate-integer-infix-expression (operator left right)
   (let ((left-value (second left))
         (right-value (second right)))
-    ;; TODO: MACRO MAGIC
     (alexandria:switch (operator :test #'equal)
       ("+" (list :integer (+ left-value right-value)))
       ("-" (list :integer (- left-value right-value)))

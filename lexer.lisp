@@ -12,7 +12,6 @@
                       ("return" . :return))
                     :test #'equal))
 
-;; TODO: Multi characater tokens like == /= && ||
 (defparameter *simple-tokens*
   (alist-hash-table '((#\+ . :plus)
                       (#\- . :minus)
@@ -101,10 +100,8 @@
                       (or (alphanumericp char)
                           (char= char #\_))))
                (read-while #'valid)))
-           ;; TODO: This doesn't handle hex or anything else.
            (read-number ()
              (read-while #'digit-char-p))
-           ;; TODO: This should have a better name.
            (lookup-identifier (ident)
              (gethash ident *builtins* :identifier))
            ;; THIS MUST be the last form.

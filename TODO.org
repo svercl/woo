@@ -1,6 +1,18 @@
 #+TITLE: TODO
 
-* DONE Use `position` instead for precedence table
-* DONE Fix precedence
-* TODO Fix REPL behavior
-* TODO Fix identifiers in evaluator
+* REPL
+** TODO Fix prompt
+
+* Lexer
+** TODO Handle different base numbers
+
+* Evaluator
+** TODO Use macros for infix integer expression
+** TODO Be able to lookup identifiers
+
+* Parser
+** DONE Use ~position~ instead for precedence table
+** DONE Fix precedence
+** TODO Do not signal errors from lisp
+** TODO Call expressions
+** TODO Signal an error in ~parse-expression~ when we can't find a prefix

@@ -73,8 +73,6 @@
 (defmethod peek-kind/= ((parser parser) kind)
   (not (peek-kind= parser kind)))
 
-;; TODO: Collect errors and present them the user, instead of
-;; exposing that we use secret alien technology.
 (defmethod expect-peek ((parser parser) kind)
   "Expect KIND, if so then advance PARSER, otherwise signal an error."
   (if (peek-kind= parser kind)
@@ -141,16 +139,15 @@
     (:if #'parse-if-expression)
     (:function #'parse-function-literal)))
 
-;; TODO: This doesn't work for :left-paren which needs to call a different function.
 ;; NOTE: We can probably handle this specifically, or handle it as above.
 (defparameter *infix-kinds*
   '(:plus :minus :star :slash :equal :not-equal :less-than :greater-than :left-paren))
 
 (defun parse-expression (parser &optional (precedence :lowest))
+  (check-type precedence keyword)
   (loop :with prefix := (prefix-parser-for (current-kind parser))
         :with expr = (if prefix
                          (funcall prefix parser)
-                         ;; TODO: Signal an error
                          (return nil))
         :with precedence-number := (precedence-to-integer precedence)
         :for peek-precedence := (precedence-to-integer (peek-precedence parser))
