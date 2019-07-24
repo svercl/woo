@@ -60,13 +60,13 @@
 (defun evaluate-prefix-expression (node env)
   (let ((right (evaluate (fourth node) env))
         (operator (third node)))
-    (alexandria:switch (operator :test #'equal)
+    (switch (operator :test #'equal)
       ("!" (evaluate-bang-operator-expression right))
       ("-" (evaluate-minus-prefix-operator-expression right))
       (t (error "Unknown operator ~A~A" operator right)))))
 
 (defun evaluate-bang-operator-expression (right)
-  (alexandria:switch (right :test #'equal)
+  (switch (right :test #'equal)
     (+true-object+ +false-object+)
     (+false-object+ +true-object+)
     (+null-object+ +true-object+)
@@ -95,7 +95,7 @@
         (right (evaluate (fifth node) env)))
     (if (%both-equal-to left right :integer)
         (%evaluate-integer-infix-expression operator left right)
-        (alexandria:switch (operator :test #'equal)
+        (switch (operator :test #'equal)
           ("==" (%from-native (equal left right)))
           ("!=" (%from-native (not (equal left right))))
           (t (error "Unknown operator ~A ~A ~A"
@@ -109,7 +109,7 @@
                     (if ,bool
                         (%from-native (funcall fun left-value right-value))
                         (list :integer (funcall fun left-value right-value))))))
-      (alexandria:switch (operator :test #'equal)
+      (switch (operator :test #'equal)
         ("+" (make-operator '+))
         ("-" (make-operator '-))
         ("*" (make-operator '*))
