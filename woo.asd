@@ -4,7 +4,7 @@
   :description "A programming language."
   :author "Brad Svercl <bradsvercl@gmail.com>"
   :license "MIT"
-  :version "0.0.1"
+  :version "0.1.0"
   :serial t
   :depends-on (:alexandria :serapeum)
   :components ((:file "package")
