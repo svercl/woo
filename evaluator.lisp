@@ -14,8 +14,11 @@
 (defparameter +false-object+ '(:boolean nil))
 (defparameter +null-object+ '(:null))
 
+(defun node-kind (node)
+  (first node))
+
 (defun evaluate (node env)
-  (case (first node)
+  (case (node-kind node)
     (:program (evaluate-program node env))
     (:block-statement (evaluate-block-statement node env))
     (:expression-statement (evaluate (third node) env))
@@ -32,7 +35,7 @@
 (defun evaluate-program (node env)
   (loop :for statement :in (second node)
         :for result := (evaluate statement env)
-        :when (eq (first result) :return-value)
+        :when (node-kind= result :return-value)
           :do (return (second result))
         :finally (return result)))
 
@@ -51,11 +54,9 @@
     (list :return-value value)))
 
 (defun evaluate-let-statement (node env)
-  ;; (print (token-literal (second (third node))))
   (when-let (value (evaluate (fourth node) env))
     (let ((name (token-literal (second (third node)))))
-      (set-in env name value)
-      (princ (get-from env name)))))
+      (set-in env name value))))
 
 (defun evaluate-prefix-expression (node env)
   (let ((right (evaluate (fourth node) env))
@@ -79,15 +80,18 @@
 (defun %from-native (b)
   (if b +true-object+ +false-object+))
 
-(defun %truthyp (o)
-  (case (first o)
-    (:boolean (second o))
+(defun %truthyp (node)
+  (case (node-kind node)
+    (:boolean (second node))
     (:null nil)
     (t t)))
 
+(defun node-kind= (node kind)
+  (eq (first node) kind))
+
 (defun %both-equal-to (left right kind)
-  (and (eq (first left) kind)
-       (eq (first right) kind)))
+  (and (node-kind= left kind)
+       (node-kind= right kind)))
 
 (defun evaluate-infix-expression (node env)
   (let ((operator (third node))
@@ -153,10 +157,10 @@
         :do (set-in environment parameter argument)
         :finally (return environment)))
 
-(defun %unwrap-return-value (o)
-  (if (eq (first o) :return-value)
-      (second o)
-      o))
+(defun %unwrap-return-value (node)
+  (if (node-kind= node :return-value)
+      (second node)
+      node))
 
 (defun %apply-function (function arguments)
   (let* ((extended-environment (%extend-function-environment function arguments))
