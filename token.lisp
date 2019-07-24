@@ -20,7 +20,7 @@
                         :literal literal))
 
 (defmethod token-precedence ((token token))
-  (gethash (token-kind token) *token-precedence* 0))
+  (or (cdr (assoc (token-kind token) *token-precedence*)) :lowest))
 
 (defmethod token= ((this token) (that token))
   (and (eq (token-kind this)

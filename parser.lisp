@@ -8,25 +8,18 @@
 (defun precedence-to-integer (precedence)
   (or (position precedence *precedences*) 0))
 
-;; TODO: This macro doesn't work at compile time apparently.
-(defun precedence-hash-table (alist &key (test #'eq))
-  (let ((table (loop :for (name . precedence) :in alist
-                     :for number := (precedence-to-integer precedence)
-                     :collect (cons name number))))
-    (alist-hash-table table :test test)))
-
 (defparameter *token-precedence*
-  (precedence-hash-table '((:equal . :equals)
-                           (:not-equal . :equals)
-                           (:less-than . :comparison)
-                           (:less-equal . :comparison)
-                           (:greater-than . :comparison)
-                           (:greater-equal . :comarison)
-                           (:plus . :sum)
-                           (:minus . :sum)
-                           (:star . :product)
-                           (:slash . :product)
-                           (:left-paren . :call))))
+  '((:equal . :equals)
+    (:not-equal . :equals)
+    (:less-than . :comparison)
+    (:less-equal . :comparison)
+    (:greater-than . :comparison)
+    (:greater-equal . :comarison)
+    (:plus . :sum)
+    (:minus . :sum)
+    (:star . :product)
+    (:slash . :product)
+    (:left-paren . :call)))
 
 (defclass parser ()
   ((lexer :accessor lexer
@@ -159,10 +152,8 @@
                          (funcall prefix parser)
                          ;; TODO: Signal an error
                          (return nil))
-        :with precedence-number := (if (keywordp precedence)
-                                       (precedence-to-integer precedence)
-                                       precedence)
-        :for peek-precedence := (peek-precedence parser)
+        :with precedence-number := (precedence-to-integer precedence)
+        :for peek-precedence := (precedence-to-integer (peek-precedence parser))
         :for not-semicolon-p := (peek-kind/= parser :semicolon)
         :for lower-precedence-p := (< precedence-number peek-precedence)
         :while (and not-semicolon-p lower-precedence-p)
