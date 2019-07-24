@@ -5,12 +5,13 @@
 ** TODO Handle different base numbers
 
 * Evaluator
+** DONE Fix precedence
 ** TODO Use macros for infix integer expression
 ** TODO Be able to lookup identifiers
 
+** TODO Precedence is still not quite right
 * Parser
 ** DONE Use ~position~ instead for precedence table
-** DONE Fix precedence
 ** TODO Do not signal errors from lisp
 ** TODO Call expressions
 ** TODO Signal an error in ~parse-expression~ when we can't find a prefix

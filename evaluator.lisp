@@ -7,11 +7,8 @@
     ((:integer :boolean) (write-to-string (second node)))
     (:null "null")
     (:return-value (inspect-object (second node)))
-    (:function (%inspect-function node))))
-
-(defun %inspect-function (fun)
-  (format t "fn(~{~A~^, ~}) {~%~A~%}"
-          (second fun) (fourth fun)))
+    (:function (format nil "fn(~{~A~^, ~}) {~%~A~%}"
+                       (second node) (fourth node)))))
 
 (defparameter +true-object+ '(:boolean t))
 (defparameter +false-object+ '(:boolean nil))
@@ -46,7 +43,7 @@
         :for return-value-p := (eq kind :return-value)
         :for errorp := (eq kind :error)
         :when (or return-value-p errorp)
-          :do (return result)
+          :do (loop-finish)
         :finally (return result)))
 
 (defun evaluate-return-statement (node env)

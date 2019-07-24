@@ -144,6 +144,7 @@
   '(:plus :minus :star :slash :equal :not-equal :less-than :greater-than :left-paren))
 
 (defun parse-expression (parser &optional (precedence :lowest))
+  ;; we convert it into an integer inside the loop
   (check-type precedence keyword)
   (loop :with prefix := (prefix-parser-for (current-kind parser))
         :with expr = (if prefix
@@ -153,10 +154,14 @@
         :for peek-precedence := (precedence-to-integer (peek-precedence parser))
         :for not-semicolon-p := (peek-kind/= parser :semicolon)
         :for lower-precedence-p := (< precedence-number peek-precedence)
+        ;; continue only if we don't encounter a semicolon and our
+        ;; precedence is lower than the peek token
         :while (and not-semicolon-p lower-precedence-p)
+        ;; if this is an infix expression, we parse it and update expr
         :when (find (peek-kind parser) *infix-kinds*)
           :do (next parser)
           :and :do (setf expr (parse-infix-expression parser expr))
+          :and :do (loop-finish)
         :finally (return expr)))
 
 (defun parse-identifier (parser)
