@@ -6,7 +6,7 @@
 
 * Evaluator
 ** DONE Fix precedence
-** TODO Use macros for infix integer expression
+** DONE Use macros for infix integer expression
 ** TODO Be able to lookup identifiers
 
 ** TODO Precedence is still not quite right
