@@ -1,0 +1,6 @@
+#+TITLE: TODO
+
+* TODO Use `position` instead for precedence table
+* DONE Fix precedence
+* TODO Fix REPL behavior
+* TODO Fix identifiers in evaluator

@@ -43,23 +43,23 @@
 (defun evaluate-block-statement (node env)
   (loop :for statement :in (third node)
         :for result := (evaluate statement env)
-        :when result
-          :do (progn
-                (let ((kind (first result)))
-                  (when (or (eq kind :return-value)
-                            (eq kind :error))
-                    (return result))))
+        :for kind := (first result)
+        :for return-value-p := (eq kind :return-value)
+        :for errorp := (eq kind :error)
+        :when (or return-value-p errorp)
+          :do (return result)
         :finally (return result)))
 
 (defun evaluate-return-statement (node env)
-  (let ((value (evaluate (third node) env)))
-    (when value
-      (list :return-value value))))
+  (when-let (value (evaluate (third node) env))
+    (list :return-value value)))
 
 (defun evaluate-let-statement (node env)
-  (let ((value (evaluate (fourth node) env)))
-    (when value
-      (set-in env (third (fourth node)) value))))
+  ;; (print (token-literal (second (third node))))
+  (when-let (value (evaluate (fourth node) env))
+    (let ((name (token-literal (second (third node)))))
+      (set-in env name value)
+      (princ (get-from env name)))))
 
 (defun evaluate-prefix-expression (node env)
   (let ((right (evaluate (fourth node) env))
@@ -70,10 +70,11 @@
       (t (error "Unknown operator ~A~A" operator right)))))
 
 (defun evaluate-bang-operator-expression (right)
-  (cond ((eq right +true-object+) +false-object+)
-        ((eq right +false-object+) +true-object+)
-        ((eq right +null-object+) +true-object+)
-        (t +false-object+)))
+  (alexandria:switch (right)
+    (+true-object+ +false-object+)
+    (+false-object+ +true-object+)
+    (+null-object+ +true-object+)
+    (t +false-object+)))
 
 (defun evaluate-minus-prefix-operator-expression (right)
   (let ((value (second right)))
@@ -123,7 +124,7 @@
   (let ((condition (evaluate (third node) env)))
     (cond ((%truthyp condition)
            (evaluate (fourth node) env))
-          ((not (null (fifth node)))
+          ((fifth node)
            (evaluate (fifth node) env))
           (t +null-object+))))
 
