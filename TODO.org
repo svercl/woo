@@ -1,15 +1,15 @@
 * REPL
-** TODO Fix prompt
-
+** DONE Fix prompt
 * Lexer
 ** TODO Handle different base numbers
-
 * Evaluator
 ** DONE Fix precedence
 ** DONE Use macros for infix integer expression
-** TODO Be able to lookup identifiers
+** DONE Be able to lookup identifiers
 
+- The environment was being reset every loop
 ** TODO Precedence is still not quite right
+- It is because the minus operator is always considered to be prefix
 * Parser
 ** DONE Use ~position~ instead for precedence table
 ** TODO Do not signal errors from lisp

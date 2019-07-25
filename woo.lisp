@@ -3,12 +3,14 @@
 (in-package :woo)
 
 (defun parse-string (text)
+  "Take a string and parse it."
   (let* ((lexer (make-lexer text))
          (parser (make-parser lexer))
          (program (parse-program parser)))
     program))
 
 (defun rpl ()
+  "Read print loop."
   (loop (princ ">> ")
         (force-output)
         (let* ((text (read-line))
@@ -17,6 +19,7 @@
           (terpri))))
 
 (defun repl ()
+  "Read evaluate print loop."
   (let ((env (make-environment)))
     (loop (princ ">> ")
           (force-output)
