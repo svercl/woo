@@ -2,22 +2,31 @@
 
 (in-package :woo)
 
-(defparameter *precedences* '(:lowest :equals :comparison :sum :product :prefix :call))
+(defparameter +precedences+
+  '(:lowest :equals :comparison :sum :product :prefix :call))
 
 (defun precedence-to-integer (precedence)
-  (or (position precedence *precedences*) 0))
+  (or (position precedence +precedences+) 0))
 
-(defparameter *token-precedence* '((:equal . :equals)
-                                   (:not-equal . :equals)
-                                   (:less-than . :comparison)
-                                   (:less-equal . :comparison)
-                                   (:greater-than . :comparison)
-                                   (:greater-equal . :comarison)
-                                   (:plus . :sum)
-                                   (:minus . :sum)
-                                   (:star . :product)
-                                   (:slash . :product)
-                                   (:left-paren . :call)))
+(defparameter +token-precedence+
+  '((:equal . :equals)
+    (:not-equal . :equals)
+    (:less-than . :comparison)
+    (:less-equal . :comparison)
+    (:greater-than . :comparison)
+    (:greater-equal . :comarison)
+    (:plus . :sum)
+    (:minus . :sum)
+    (:star . :product)
+    (:slash . :product)
+    (:left-paren . :call)))
+
+(defun token-precedence-to-integer (token-kind)
+  (precedence-to-integer (cdr (assoc token-kind +token-precedence+))))
+
+;; NOTE: We can probably handle this specifically, or handle it as above.
+(defparameter +infix-kinds+
+  '(:plus :minus :star :slash :equal :not-equal :less-than :greater-than :left-paren))
 
 (defclass parser ()
   ((lexer :accessor parser-lexer
@@ -80,7 +89,7 @@
   "Expect KIND, if so then advance PARSER, otherwise signal an error."
   (if (peek-kind= parser kind)
       (next parser)
-      (error "Expected ~A but got ~A" kind (peek-kind parser))))
+      (cerror "Expected ~A but got ~A" kind (peek-kind parser))))
 
 (defmethod current-precedence ((parser parser))
   (token-precedence (parser-current parser)))
@@ -142,17 +151,13 @@
     (:if #'parse-if-expression)
     (:function #'parse-function-literal)))
 
-;; NOTE: We can probably handle this specifically, or handle it as above.
-(defparameter *infix-kinds*
-  '(:plus :minus :star :slash :equal :not-equal :less-than :greater-than :left-paren))
-
 (defun parse-expression (parser &optional (precedence :lowest))
   ;; we convert it into an integer inside the loop
   (check-type precedence keyword)
   (loop :with prefix := (prefix-parser-for (current-kind parser))
-        :with expr = (if prefix
-                         (funcall prefix parser)
-                         (return nil))
+        :with expression = (if prefix
+                               (funcall prefix parser)
+                               (return nil))
         :with precedence-number := (precedence-to-integer precedence)
         :for peek-precedence := (precedence-to-integer (peek-precedence parser))
         :for not-semicolon-p := (peek-kind/= parser :semicolon)
@@ -161,11 +166,11 @@
         ;; precedence is lower than the peek token
         :while (and not-semicolon-p lower-precedence-p)
         ;; if this is an infix expression, we parse it and update expr
-        :when (find (peek-kind parser) *infix-kinds*)
+        :when (find (peek-kind parser) +infix-kinds+)
           :do (next parser)
-          :and :do (setf expr (parse-infix-expression parser expr))
+          :and :do (setf expression (parse-infix-expression parser expression))
           :and :do (loop-finish)
-        :finally (return expr)))
+        :finally (return expression)))
 
 (defun parse-identifier (parser)
   (let* ((token (parser-current parser))
@@ -204,9 +209,9 @@
     (let ((condition (parse-expression parser)))
       (expect-peek parser :right-paren)
       (let ((consequence (parse-block-statement parser))
-            (alternative))
+            (alternative nil))
         (when (peek-kind= parser :else)
-          (next parser) ; skip "else"
+          (next parser)
           (setf alternative (parse-block-statement parser)))
         (list :if-expression token condition consequence alternative)))))
 
@@ -226,9 +231,9 @@
 
 ;; "fn" FN-PARAMS BLOCK
 (defun parse-function-literal (parser)
-  (let* ((token (parser-current parser))
-         (parameters (parse-function-parameters parser))
-         (body (parse-block-statement parser)))
+  (let ((token (parser-current parser))
+        (parameters (parse-function-parameters parser))
+        (body (parse-block-statement parser)))
     (list :function-literal token parameters body)))
 
 ;; "(" ")"
@@ -238,7 +243,7 @@
   ;; no parameters
   (when (peek-kind= parser :right-paren)
     (next parser)
-    (return-from parse-function-parameters nil))
+    (return-from parse-function-parameters))
   (next parser)
   (loop :with identifier := (parse-identifier parser)
         :while (peek-kind= parser :comma)
@@ -256,3 +261,21 @@
     (next parser)
     (let ((right (parse-expression parser precedence)))
       (list :infix-expression token operator left right))))
+
+(defun parse-call-expression (parser fun)
+  (let ((token (parser-current parser))
+        (arguments (parse-call-arguments parser)))
+    (list :call-expression token fun arguments)))
+
+(defun parse-call-arguments (parser)
+  (when (peek-kind= parser :right-paren)
+    (next parser)
+    (return-from parse-call-arguments))
+  (next parser)
+  (loop :with argument := (parse-expression parser)
+        :while (peek-kind= parser :comma)
+        :do (next parser)
+        :do (next parser)
+        :collect (parse-expression parser) :into arguments
+        :finally (progn (expect-peek parser :right-paren)
+                        (return (cons argument arguments)))))

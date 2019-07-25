@@ -2,6 +2,7 @@
 ** DONE Fix prompt
 * Lexer
 ** TODO Handle different base numbers
+** TODO Token positions
 * Evaluator
 ** DONE Fix precedence
 ** DONE Use macros for infix integer expression
