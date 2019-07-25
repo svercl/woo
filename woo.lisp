@@ -21,8 +21,7 @@
     (loop (princ ">> ")
           (force-output)
           (let* ((text (read-line))
-                 (parsed (parse-string text))
-                 (evaluated (evaluate parsed env)))
-            (when evaluated
+                 (parsed (parse-string text)))
+            (when-let (evaluated (evaluate parsed env))
               (princ (inspect-object evaluated)))
             (terpri)))))
