@@ -10,17 +10,19 @@
 
 (defun rpl ()
   (loop (princ ">> ")
+        (force-output)
         (let* ((text (read-line))
                (parsed (parse-string text)))
           (pprint parsed)
           (terpri))))
 
 (defun repl ()
-  (loop (princ ">> ")
-        (let* ((text (read-line))
-               (parsed (parse-string text))
-               (env (make-environment))
-               (evaluated (evaluate parsed env)))
-          (when evaluated
-            (princ (inspect-object evaluated)))
-          (terpri))))
+  (let ((env (make-environment)))
+    (loop (princ ">> ")
+          (force-output)
+          (let* ((text (read-line))
+                 (parsed (parse-string text))
+                 (evaluated (evaluate parsed env)))
+            (when evaluated
+              (princ (inspect-object evaluated)))
+            (terpri)))))
