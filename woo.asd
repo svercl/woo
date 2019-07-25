@@ -14,6 +14,7 @@
                (:file "parser")
                (:file "environment")
                (:file "evaluator"))
+  :in-order-to ((test-op (test-op "woo-test")))
   :build-operation "program-op"
   :build-pathname "woo"
   :entry-point "woo::repl")

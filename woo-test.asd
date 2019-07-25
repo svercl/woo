@@ -9,4 +9,5 @@
   :components ((:file "package")
                (:file "environment")
                (:file "lexer")
-               (:file "parser")))
+               (:file "parser"))
+  :perform (test-op (o s) (woo-test::run-all-tests)))

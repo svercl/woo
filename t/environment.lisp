@@ -2,6 +2,8 @@
 
 (in-package :woo-test)
 
+(in-suite woo-environment)
+
 (test lookup-symbols
   (let* ((inner (woo::make-environment))
          (outer (woo::make-environment inner)))
