@@ -10,7 +10,9 @@
      ("t" . :t)
      ("nil" . :nil)
      ("let" . :let)
-     ("return" . :return))
+     ("return" . :return)
+     ("do" . :do)
+     ("end" . :end))
    :test #'equal))
 
 (defparameter +simple-tokens+
@@ -37,6 +39,7 @@
      (#\; . :semicolon)
      (#\& . :ampersand)
      (#\# . :hash)
+     (#\@ . :at)
      (#\Nul . :eof)))
   "single character tokens")
 
@@ -65,8 +68,8 @@
 
 (defmethod print-object ((lexer lexer) stream)
   (print-unreadable-object (lexer stream)
-    (with-slots (text position current) lexer
-      (format stream "~A~%(~A,~A)" text position current))))
+    (with-slots (current) lexer
+      (princ current stream))))
 
 (defun make-lexer (text)
   (make-instance 'lexer :text text))
@@ -103,7 +106,7 @@
                       (or (alphanumericp char)
                           (char= char #\_))))
                (read-while #'valid)))
-           (read-number ()
+           (read-integer ()
              (read-while #'digit-char-p))
            (lookup-identifier (ident)
              (gethash ident +builtins+ :identifier))
@@ -120,7 +123,7 @@
           :do (advance))
     (let* ((current (lexer-current lexer))
            (simple (gethash current +simple-tokens+))
-           (both (concatenate 'string (string current) (string (peek))))
+           (both (concatenate 'string (list current (peek))))
            (two-char (gethash both +two-char-tokens+)))
       (cond ((or two-char simple)
              (if two-char
@@ -128,7 +131,7 @@
                    (advance))
                  (token simple (string current))))
             ((digit-char-p current)
-             (token :number (read-number) nil))
+             (token :integer (read-integer) nil))
             ((alpha-char-p current)
              (let ((ident (read-identifier)))
                (token (lookup-identifier ident) ident nil)))

@@ -3,17 +3,12 @@
 
 (in-package :woo)
 
-(defun just-tokens (leaf)
-  ;; #'first denotes what kind of thing it is,
-  ;; e.g., :if-expression :number-literal :prefix-expression
-  (second leaf))
-
 ;; NOTE: not the actual values contained
 ;; (:let-statement token identifier expression)
 ;; (:return-statement token (:value expression))
 ;; (:expression-statement token expression)
 ;; (:identifier token string)
-;; (:number-literal token integer)
+;; (:integer-literal token integer)
 ;; (:prefix-expression token (:operator string) (:right expression))
 ;; (:boolean token (:value (not nil)))
 ;; (:if-expression token (:condition expression) (:consequence block) (:alternative (or nil block)))

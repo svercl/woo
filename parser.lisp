@@ -144,7 +144,7 @@
   ;; implicit nil
   (case kind
     (:identifier #'parse-identifier)
-    (:number #'parse-number-literal)
+    (:integer #'parse-integer-literal)
     ((:bang :minus) #'parse-prefix-expression)
     ((:t :nil) #'parse-boolean-literal)
     (:left-paren #'parse-grouped-expression)
@@ -154,22 +154,18 @@
 (defun parse-expression (parser &optional (precedence :lowest))
   ;; we convert it into an integer inside the loop
   (check-type precedence keyword)
-  (loop :with prefix := (prefix-parser-for (current-kind parser))
-        :with expression = (if prefix
-                               (funcall prefix parser)
-                               (return nil))
+  (loop :with expression = (if-let (prefix (prefix-parser-for (current-kind parser)))
+                             (funcall prefix parser)
+                             (return nil))
         :with precedence-number := (precedence-to-integer precedence)
         :for peek-precedence := (precedence-to-integer (peek-precedence parser))
-        :for not-semicolon-p := (peek-kind/= parser :semicolon)
-        :for lower-precedence-p := (< precedence-number peek-precedence)
-        ;; continue only if we don't encounter a semicolon and our
-        ;; precedence is lower than the peek token
-        :while (and not-semicolon-p lower-precedence-p)
+        :while (and (peek-kind/= parser :semicolon)
+                    (< precedence-number peek-precedence))
         ;; if this is an infix expression, we parse it and update expr
-        :when (find (peek-kind parser) +infix-kinds+)
+        :if (member (peek-kind parser) +infix-kinds+)
           :do (next parser)
           :and :do (setf expression (parse-infix-expression parser expression))
-          :and :do (loop-finish)
+        :else :do (loop-finish)
         :finally (return expression)))
 
 (defun parse-identifier (parser)
@@ -177,7 +173,7 @@
          (value (token-literal token)))
     (list :identifier token value)))
 
-(defun parse-number-literal (parser)
+(defun parse-integer-literal (parser)
   (let* ((token (parser-current parser))
          (value (parse-integer (token-literal token) :junk-allowed t)))
     (list :integer-literal token value)))
