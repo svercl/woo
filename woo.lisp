@@ -25,3 +25,11 @@
             (when-let (evaluated (evaluate parsed env))
               (princ (inspect-object evaluated)))
             (terpri)))))
+
+(defun rep-file (pathname)
+  "Read evaluate and print file."
+  (let* ((env (make-environment))
+         (text (alexandria:read-file-into-string pathname))
+         (parsed (parse-string text))
+         (evaluated (evaluate parsed env)))
+    (princ (inspect-object evaluated))))
