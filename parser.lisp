@@ -5,8 +5,12 @@
 (defparameter +precedences+
   '(:lowest :equals :comparison :sum :product :prefix :call))
 
-(defun precedence-to-integer (precedence)
-  (or (position precedence +precedences+) 0))
+(deftype precedence ()
+  `(member ,@+precedences+))
+
+(defun precedence< (this that)
+  (< (position this +precedences+)
+     (position that +precedences+)))
 
 (defparameter +token-precedence+
   '((:equal . :equals)
@@ -154,10 +158,9 @@
   (loop :with expression = (if-let (prefix (prefix-parser-for (current-kind parser)))
                              (funcall prefix parser)
                              (return nil))
-        :with precedence-number := (precedence-to-integer precedence)
-        :for peek-precedence := (precedence-to-integer (peek-precedence parser))
+        :for peek-precedence := (peek-precedence parser)
         :while (and (peek-kind/= parser :semicolon)
-                    (< precedence-number peek-precedence))
+                    (precedence< precedence peek-precedence))
         ;; if this is an infix expression, we parse it and update expr
         :if (member (peek-kind parser) +infix-kinds+)
           :do (next parser)
