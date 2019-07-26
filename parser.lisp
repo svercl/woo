@@ -21,9 +21,6 @@
     (:slash . :product)
     (:left-paren . :call)))
 
-(defun token-precedence-to-integer (token-kind)
-  (precedence-to-integer (cdr (assoc token-kind +token-precedence+))))
-
 ;; NOTE: We can probably handle this specifically, or handle it as above.
 (defparameter +infix-kinds+
   '(:plus :minus :star :slash :equal :not-equal :less-than :greater-than :left-paren))

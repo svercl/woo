@@ -20,8 +20,7 @@
                         :literal literal))
 
 (defmethod token-precedence ((token token))
-  (or (token-precedence-to-integer (token-kind token))
-      :lowest))
+  (or (cdr (assoc (token-kind token) +token-precedence+)) :lowest))
 
 (defmethod token= ((this token) (that token))
   (and (eq (token-kind this)

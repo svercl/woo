@@ -9,7 +9,7 @@
 ** DONE Be able to lookup identifiers
 
 - The environment was being reset every loop
-** TODO Precedence is still not quite right
+** DONE Precedence is still not quite right
 - It is because the minus operator is always considered to be prefix
 * Parser
 ** DONE Use ~position~ instead for precedence table
