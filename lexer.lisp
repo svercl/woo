@@ -123,7 +123,7 @@
           :do (advance))
     (let* ((current (lexer-current lexer))
            (simple (gethash current +simple-tokens+))
-           (both (concatenate 'string (list current (peek))))
+           (both (coerce (list current (peek)) 'string))
            (two-char (gethash both +two-char-tokens+)))
       (cond ((or two-char simple)
              (if two-char
