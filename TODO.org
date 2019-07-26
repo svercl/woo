@@ -3,6 +3,7 @@
 * Lexer
 ** TODO Handle different base numbers
 ** TODO Token positions
+** TODO Strings
 * Evaluator
 ** DONE Fix precedence
 ** DONE Use macros for infix integer expression

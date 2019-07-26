@@ -226,9 +226,9 @@
 
 ;; "fn" FN-PARAMS BLOCK
 (defun parse-function-literal (parser)
-  (let ((token (parser-current parser))
-        (parameters (parse-function-parameters parser))
-        (body (parse-block-statement parser)))
+  (let* ((token (parser-current parser))
+         (parameters (parse-function-parameters parser))
+         (body (parse-block-statement parser)))
     (list :function-literal token parameters body)))
 
 ;; "(" ")"
@@ -260,8 +260,8 @@
                  (list :infix-expression token operator left right))))))
 
 (defun parse-call-expression (parser left)
-  (let ((token (parser-current parser))
-        (arguments (parse-call-arguments parser)))
+  (let* ((token (parser-current parser))
+         (arguments (parse-call-arguments parser)))
     (list :call-expression token left arguments)))
 
 (defun parse-call-arguments (parser)
