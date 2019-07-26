@@ -16,11 +16,11 @@
       (format stream "~A: ~S" kind literal))))
 
 (defun make-token (kind literal)
-  (make-instance 'token :kind kind
-                        :literal literal))
+  (make-instance 'token :kind kind :literal literal))
 
 (defmethod token-precedence ((token token))
-  (or (cdr (assoc (token-kind token) +token-precedence+)) :lowest))
+  (let ((precedence (assoc (token-kind token) +token-precedences+)))
+    (or (cdr precedence) :lowest)))
 
 (defmethod token= ((this token) (that token))
   (and (eq (token-kind this)

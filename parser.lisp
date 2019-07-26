@@ -12,7 +12,7 @@
   (< (position this +precedences+)
      (position that +precedences+)))
 
-(defparameter +token-precedence+
+(defparameter +token-precedences+
   '((:equal . :equals)
     (:not-equal . :equals)
     (:less-than . :comparison)
@@ -162,10 +162,9 @@
         :while (and (peek-kind/= parser :semicolon)
                     (precedence< precedence peek-precedence))
         ;; if this is an infix expression, we parse it and update expr
-        :if (member (peek-kind parser) +infix-kinds+)
+        :when (member (peek-kind parser) +infix-kinds+)
           :do (next parser)
           :and :do (setf expression (parse-infix-expression parser expression))
-        :else :do (loop-finish)
         :finally (return expression)))
 
 (defun parse-identifier (parser)
@@ -254,14 +253,16 @@
   (let* ((token (parser-current parser))
          (operator (token-literal token))
          (precedence (token-precedence token)))
-    (next parser)
-    (let ((right (parse-expression parser precedence)))
-      (list :infix-expression token operator left right))))
+    (if (token-kind= token :left-paren)
+        (parse-call-expression parser left)
+        (progn (next parser)
+               (let ((right (parse-expression parser precedence)))
+                 (list :infix-expression token operator left right))))))
 
-(defun parse-call-expression (parser fun)
+(defun parse-call-expression (parser left)
   (let ((token (parser-current parser))
         (arguments (parse-call-arguments parser)))
-    (list :call-expression token fun arguments)))
+    (list :call-expression token left arguments)))
 
 (defun parse-call-arguments (parser)
   (when (peek-kind= parser :right-paren)

@@ -10,7 +10,7 @@
     ((:integer :boolean) (write-to-string (second node)))
     (:null "null")
     (:return-value (inspect-object (second node)))
-    (:function (format nil "fn(~{~A~^, ~}) {~%~A~%}"
+    (:function (format nil "fn(~{~A~^, ~}) {~%~{~A~&~}~%}"
                        (second node) (fourth node)))))
 
 (defparameter +true-object+ '(:boolean t))
@@ -30,7 +30,8 @@
     (:infix-expression (evaluate-infix-expression node env))
     (:if-expression (evaluate-if-expression node env))
     (:identifier (evaluate-identifier node env))
-    (:function-literal (evaluate-function-literal node env))))
+    (:function-literal (evaluate-function-literal node env))
+    (:call-expression (evaluate-call-expression node env))))
 
 (defun evaluate-program (node env)
   (loop :for statement :in (second node)
@@ -141,7 +142,10 @@
   (let ((parameters (evaluate (third node) env)))
     (list :function parameters env (fourth node))))
 
-(defun evaluate-call-expression (node env))
+(defun evaluate-call-expression (node env)
+  (let ((function (evaluate (third node) env))
+        (arguments (%evaluate-expressions (fourth node) env)))
+    (%apply-function function arguments)))
 
 (defun %evaluate-expressions (expressions env)
   (loop :for expression :in expressions

@@ -11,6 +11,7 @@
 - The environment was being reset every loop
 ** DONE Precedence is still not quite right
 - It is because the minus operator is always considered to be prefix
+** TODO Fix ~inspect-object~ for function
 * Parser
 ** DONE Use ~position~ instead for precedence table
 ** TODO Do not signal errors from lisp
