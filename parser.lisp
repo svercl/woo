@@ -105,8 +105,7 @@
 (defun parse-program (parser)
   (loop :while (current-kind/= parser :eof)
         :for stmt := (parse-statement parser)
-        :when stmt
-          :collect stmt :into program
+        :when stmt :collect :it :into program
         :do (next parser)
         :finally (return (list :program program))))
 
@@ -220,7 +219,7 @@
           :while (and not-end-kind not-eof)
           :for statement := (parse-statement parser)
           :when statement
-            :collect statement :into statements
+            :collect :it :into statements
             :and :do (next parser)
           :finally (return (list :block-statement token statements)))))
 
