@@ -19,8 +19,7 @@
   (make-instance 'token :kind kind :literal literal))
 
 (defmethod token-precedence ((token token))
-  (let ((precedence (assoc (token-kind token) +token-precedences+)))
-    (or (cdr precedence) :lowest)))
+  (or (assoc-value +token-precedences+ (token-kind token)) :lowest))
 
 (defmethod token= ((this token) (that token))
   (and (eq (token-kind this)
