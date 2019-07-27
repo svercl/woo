@@ -78,10 +78,10 @@
 
 (defmethod next ((lexer lexer))
   "Get the next token"
-  (labels ((char-at (where)
-             "Return the character at WHERE otherwise the null character."
+  (labels ((char-at (index)
+             "Return the character at INDEX otherwise the null character."
              (handler-case
-                 (char (lexer-text lexer) where)
+                 (char (lexer-text lexer) index)
                (error (condition)
                  (declare (ignore condition))
                  #\Nul)))
@@ -94,7 +94,7 @@
                      position read-position)
                (incf read-position)))
            (peek ()
-             "Return the character at RPOS without advancing."
+             "Return the next character without advancing."
              (char-at (lexer-read-position lexer)))
            (read-while (pred)
              "Advance and collect the current character while PRED holds."
@@ -110,9 +110,7 @@
                (read-while #'valid)))
            (read-integer ()
              (read-while #'digit-char-p))
-           (read-string ()
-             (print lexer)
-             (read-while #'(lambda (char) (char/= char #\"))))
+           (read-string () "")
            (lookup-identifier (ident)
              (gethash ident +builtins+ :identifier))
            ;; THIS MUST be the last form.
