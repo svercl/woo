@@ -2,6 +2,11 @@
 
 (in-package :woo)
 
+(defun prompt-for-input (&optional (prompt ">> "))
+  (princ prompt)
+  (force-output)
+  (read-line))
+
 (defun parse-string (text)
   "Take a string and parse it."
   (let* ((lexer (make-lexer text))
@@ -11,9 +16,7 @@
 
 (defun rpl ()
   "Read print loop."
-  (loop (princ ">> ")
-        (force-output)
-        (let* ((text (read-line))
+  (loop (let* ((text (prompt-for-input))
                (parsed (parse-string text)))
           (pprint parsed)
           (terpri))))
@@ -21,9 +24,7 @@
 (defun repl ()
   "Read evaluate print loop."
   (let ((env (make-environment)))
-    (loop (princ ">> ")
-          (force-output)
-          (let* ((text (read-line))
+    (loop (let* ((text (prompt-for-input))
                  (parsed (parse-string text)))
             (when-let (evaluated (evaluate parsed env))
               (princ (inspect-object evaluated)))
