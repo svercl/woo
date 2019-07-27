@@ -7,8 +7,16 @@
          :initarg :kind
          :type keyword)
    (literal :reader token-literal
-        :initarg :literal
-        :type string)))
+            :initarg :literal
+            :type string)
+   (line :reader token-line
+         :initarg :line
+         :initform 0
+         :type integer)
+   (column :reader token-column
+           :initarg :column
+           :initform 0
+           :type integer)))
 
 (defmethod print-object ((token token) stream)
   (print-unreadable-object (token stream)
