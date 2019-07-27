@@ -1,4 +1,4 @@
-;;;; woo.lisp
+;;;; main.lisp
 
 (in-package :woo)
 

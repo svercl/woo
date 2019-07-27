@@ -9,6 +9,8 @@
   `(member ,@+precedences+))
 
 (defun precedence< (this that)
+  (check-type this precedence)
+  (check-type that precedence)
   (< (position this +precedences+)
      (position that +precedences+)))
 
@@ -36,10 +38,11 @@
           :documentation "The token producer.")
    (current :accessor parser-current
             :initarg :current
-            :type (or null token))
+            :initform (make-token :illegal "illegal")
+            :type token)
    (peek :accessor parser-peek
-         :initform nil
-         :type (or null token))
+         :initform (make-token :illegal "illegal")
+         :type token)
    (errors :accessor parser-errors
            :initform nil
            :type (or null list)))
@@ -160,7 +163,6 @@
         :for peek-precedence := (peek-precedence parser)
         :while (and (peek-kind/= parser :semicolon)
                     (precedence< precedence peek-precedence))
-        ;; if this is an infix expression, we parse it and update expr
         :when (member (peek-kind parser) +infix-kinds+)
           :do (next parser)
           :and :do (setf expression (parse-infix-expression parser expression))
