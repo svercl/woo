@@ -216,9 +216,9 @@
   (let ((token (parser-current parser)))
     (expect-peek parser begin-kind)
     (next parser)
-    (loop :for not-end-kind := (current-kind/= parser end-kind)
-          :for not-eof := (current-kind/= parser :eof)
-          :while (and not-end-kind not-eof)
+    (loop :for not-end-kind-p := (current-kind/= parser end-kind)
+          :for not-eof-p := (current-kind/= parser :eof)
+          :while (and not-end-kind-p not-eof-p)
           :for statement := (parse-statement parser)
           :when statement
             :collect statement :into statements
