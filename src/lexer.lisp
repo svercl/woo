@@ -76,62 +76,66 @@
 (defun make-lexer (text)
   (make-instance 'lexer :text text))
 
-(defmethod next ((lexer lexer))
-  "Get the next token"
-  (labels ((char-at (index)
-             "Return the character at INDEX otherwise the null character."
-             (handler-case
-                 (char (lexer-text lexer) index)
-               (error (condition)
-                 (declare (ignore condition))
-                 #\Nul)))
-           (advance ()
-             (with-accessors ((current lexer-current)
-                              (position lexer-position)
-                              (read-position lexer-read-position))
-                 lexer
-               (setf current (peek)
-                     position read-position)
-               (incf read-position)))
-           (peek ()
-             "Return the next character without advancing."
-             (char-at (lexer-read-position lexer)))
-           (read-while (pred)
-             "Advance and collect the current character while PRED holds."
-             (loop :for char := (lexer-current lexer)
-                   :while (funcall pred char)
-                   :do (advance)
-                   :collect char :into chars
-                   :finally (return (coerce chars 'string))))
-           (read-identifier ()
+(defmethod char-at ((lexer lexer) index)
+  "Return character at INDEX, if error then the null character."
+  (handler-case
+      (char (lexer-text lexer) index)
+    (error (condition)
+      (declare (ignore condition))
+      #\Nul)))
+
+(defmethod peek ((lexer lexer))
+  "Return the next character without advancing."
+  (char-at lexer (lexer-read-position lexer)))
+
+(defmethod advance ((lexer lexer))
+  (with-accessors ((current lexer-current)
+                   (position lexer-position)
+                   (read-position lexer-read-position))
+      lexer
+    (setf current (peek lexer)
+          position read-position)
+    (incf read-position)))
+
+(defmethod collect-while ((lexer lexer) pred)
+  "Advance and collect the current character while PRED holds."
+  (loop :for char := (lexer-current lexer)
+        :while (funcall pred char)
+        :do (advance lexer)
+        :collect char :into chars
+        :finally (return (coerce chars 'string))))
+
+(defmethod skip-whitespace ((lexer lexer))
+  (loop :for char := (lexer-current lexer)
+        :while (or (null char)
+                   (whitespacep char))
+        :do (advance lexer)))
+
+(defmethod next-token ((lexer lexer))
+  (labels ((read-identifier ()
              (flet ((valid (char)
                       (or (alphanumericp char)
-                          (char= char #\_))))
-               (read-while #'valid)))
+                          (member char '(#\- #\_ #\!)))))
+               (collect-while lexer #'valid)))
            (read-integer ()
-             (read-while #'digit-char-p))
+             (collect-while lexer #'digit-char-p))
            (read-string () "")
            (lookup-identifier (ident)
              (gethash ident +builtins+ :identifier))
-           ;; THIS MUST be the last form.
-           (token (kind lit &optional (eat t))
-             "Return a token of KIND and LIT, and maybe EAT (advance)."
-             (prog1 (make-token kind lit)
+           (token (kind literal &optional (eat t))
+             "Return a token of KIND and LITERAL, maybe advance."
+             (prog1 (make-token kind literal)
                (when eat
-                 (advance)))))
-    ;; skip over whitespace
-    (loop :for char := (lexer-current lexer)
-          :while (or (null char) ; only initially
-                     (whitespacep char))
-          :do (advance))
+                 (advance lexer)))))
+    (skip-whitespace lexer)
     (let* ((current (lexer-current lexer))
            (simple (gethash current +simple-tokens+))
-           (both (coerce (list current (peek)) 'string))
+           (both (coerce (list current (peek lexer)) 'string))
            (two-char (gethash both +two-char-tokens+)))
       (cond ((or two-char simple)
              (if two-char
                  (prog1 (token two-char both)
-                   (advance))
+                   (advance lexer))
                  (token simple (string current))))
             ((char= current #\")
              (token :string (read-string)))
@@ -140,5 +144,5 @@
             ((alpha-char-p current)
              (let ((ident (read-identifier)))
                (token (lookup-identifier ident) ident nil)))
-            ;; end-of-file or end-of-input, whatever
+            ;; end of file or end of input, whatever.
             (t (token :illegal "illegal"))))))

@@ -68,7 +68,7 @@
                    (peek parser-peek))
       parser
     (setf current peek
-          peek (next lexer))))
+          peek (next-token lexer))))
 
 ;;; Shorthand methods.
 (defmethod current-kind ((parser parser))
