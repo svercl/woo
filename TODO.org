@@ -8,15 +8,15 @@
 ** DONE Fix precedence
 ** DONE Use macros for infix integer expression
 ** DONE Be able to lookup identifiers
-
-- The environment was being reset every loop
+The environment was being reset every loop
 ** DONE Precedence is still not quite right
-- It is because the minus operator is always considered to be prefix
+It is because the minus operator is always considered to be prefix
+** TODO Print blocks correctly
 ** TODO Fix ~inspect-object~ for function
 * Parser
 ** DONE Use ~position~ instead for precedence table
+** DONE Call expressions
 ** TODO Do not signal errors from lisp
-** TODO Call expressions
 ** TODO Signal an error in ~parse-expression~ when we can't find a prefix
 ** TODO Fix ~parse-function-literal~
 *** TODO Fix ~parse-function-parameters~
