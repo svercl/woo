@@ -8,7 +8,7 @@
                 :serial t
                 :components
                 ((:file "package")
+                 (:file "suite")
                  (:file "environment")
                  (:file "lexer")
-                 (:file "parser"))))
-  :perform (test-op (o s) (woo-test::run-all-tests)))
+                 (:file "parser")))))

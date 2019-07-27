@@ -5,6 +5,3 @@
 (def-suite woo-environment :in woo)
 (def-suite woo-lexer :in woo)
 (def-suite woo-parser :in woo)
-
-(defun run-all-tests ()
-  (run! 'woo))
