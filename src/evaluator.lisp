@@ -105,8 +105,8 @@
        (node-kind= right kind)))
 
 (defun %evaluate-integer-infix-expression (operator left right)
-  (macrolet ((make-operator (op &optional bool)
-               `(let* ((function (symbol-function ,op))
+  (macrolet ((make-operator (operator &optional bool)
+               `(let* ((function (symbol-function ,operator))
                        (left-value (second left))
                        (right-value (second right))
                        (result (funcall function left-value right-value)))
