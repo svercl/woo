@@ -16,19 +16,21 @@
 
 (defun rpl ()
   "Read print loop."
-  (loop (let* ((text (prompt-read-line))
-               (parsed (parse-string text)))
-          (pprint parsed)
-          (terpri))))
+  (loop
+    (let* ((text (prompt-read-line))
+           (parsed (parse-string text)))
+      (pprint parsed)
+      (terpri))))
 
 (defun repl ()
   "Read evaluate print loop."
   (let ((env (make-environment)))
-    (loop (let* ((text (prompt-read-line))
-                 (parsed (parse-string text)))
-            (when-let (evaluated (evaluate parsed env))
-              (princ (inspect-object evaluated)))
-            (terpri)))))
+    (loop
+      (let* ((text (prompt-read-line))
+             (parsed (parse-string text)))
+        (when-let (evaluated (evaluate parsed env))
+          (princ (inspect-object evaluated)))
+        (terpri)))))
 
 (defun rep-file (pathname)
   "Read evaluate and print file."
