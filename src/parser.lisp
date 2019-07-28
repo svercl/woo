@@ -20,16 +20,18 @@
     (:less-than . :comparison)
     (:less-equal . :comparison)
     (:greater-than . :comparison)
-    (:greater-equal . :comarison)
+    (:greater-equal . :comparison)
     (:plus . :sum)
     (:minus . :sum)
     (:star . :product)
     (:slash . :product)
     (:left-paren . :call)))
 
-;; NOTE: We can probably handle this specifically, or handle it as above.
 (defparameter +infix-kinds+
-  '(:plus :minus :star :slash :equal :not-equal :less-than :greater-than :left-paren))
+  '(:plus :minus :star :slash
+    :equal :not-equal
+    :less-than :less-equal :greater-than :greater-equal
+    :left-paren))
 
 (defclass parser ()
   ((lexer :accessor parser-lexer
