@@ -93,7 +93,7 @@
   "Expect KIND, if so then advance PARSER, otherwise signal an error."
   (if (peek-kind= parser kind)
       (next parser)
-      (cerror "Expected ~A but got ~A" kind (peek-kind parser))))
+      (error "Expected ~A but got ~A" kind (peek-kind parser))))
 
 (defmethod current-precedence ((parser parser))
   (token-precedence (parser-current parser)))

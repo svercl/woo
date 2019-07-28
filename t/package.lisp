@@ -1,4 +1,4 @@
 ;;;; package.lisp
 
-(defpackage woo-test
+(defpackage :woo-test
   (:use :cl :woo :fiveam))
