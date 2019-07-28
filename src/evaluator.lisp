@@ -171,10 +171,9 @@
       node))
 
 (defun %apply-function (function arguments)
-  (if (node-kind= function :function)
-      (destructuring-bind (name parameters env body) function
-        (declare (ignore name))
-        (let* ((extended-env (%extend-function-environment env parameters arguments))
-               (result (evaluate body extended-env)))
-          (%unwrap-return-value result)))
-      (error "Not a function: ~A" function)))
+  (trivia:match function
+    ((list _ parameters env body)
+     (let* ((extended-env (%extend-function-environment env parameters arguments))
+            (result (evaluate body extended-env)))
+       (%unwrap-return-value result)))
+    (_ (error "Not a function: ~A" function))))
