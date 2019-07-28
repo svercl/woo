@@ -78,11 +78,7 @@
 
 (defmethod char-at ((lexer lexer) index)
   "Return character at INDEX, if error then the null character."
-  (handler-case
-      (char (lexer-text lexer) index)
-    (error (condition)
-      (declare (ignore condition))
-      #\Nul)))
+  (or (ignore-errors (char (lexer-text lexer) index)) #\Nul))
 
 (defmethod peek ((lexer lexer))
   "Return the next character without advancing."

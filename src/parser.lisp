@@ -111,7 +111,7 @@
   (loop :while (current-kind/= parser :eof)
         :for statement := (parse-statement parser)
         :when statement :collect statement :into program
-        :do (next parser)
+          :do (next parser)
         :finally (return (list :program program))))
 
 (defun parse-statement (parser)

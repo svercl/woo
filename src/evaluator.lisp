@@ -92,10 +92,9 @@
   (if test +true-object+ +false-object+))
 
 (defun truthyp (node)
-  (case (node-kind node)
-    (:boolean (second node))
-    (:null nil)
-    (t t)))
+  (trivia:match node
+    ((or +null-object+ +false-object+) nil)
+    (_ t)))
 
 (defun node-kind= (node kind)
   (eq (node-kind node) kind))
