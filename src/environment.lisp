@@ -13,10 +13,10 @@
 (defun make-environment (&optional outer)
   (make-instance 'environment :outer outer))
 
-(defmethod get-from ((environment environment) name)
+(defmethod get-from ((environment environment) (name string))
   (alexandria:if-let (outer (environment-outer environment))
     (get-from outer name)
     (gethash name (environment-store environment))))
 
-(defmethod set-in ((environment environment) name value)
+(defmethod set-in ((environment environment) (name string) value)
   (setf (gethash name (environment-store environment)) value))
