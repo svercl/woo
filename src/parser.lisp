@@ -122,26 +122,26 @@
 (defun parse-let-statement (parser)
   (let ((token (parser-current parser)))
     (expect-peek parser :identifier)
-    (let ((name (parse-identifier parser)))
+    (let ((identifier (parse-identifier parser)))
       (expect-peek parser :assign)
       (next parser)
-      (let ((value (parse-expression parser)))
+      (let ((expression (parse-expression parser)))
         (optional-semicolon parser)
-        (list :let-statement token name value)))))
+        (list :let-statement token identifier expression)))))
 
 ;; "return" EXPRESSION ?";"
 (defun parse-return-statement (parser)
   (let ((token (parser-current parser)))
     (next parser) ; skip "return"
-    (let ((value (parse-expression parser)))
+    (let ((expression (parse-expression parser)))
       (optional-semicolon parser)
-      (list :return-statement token value))))
+      (list :return-statement token expression))))
 
 (defun parse-expression-statement (parser)
   (let* ((token (parser-current parser))
-         (expr (parse-expression parser)))
+         (expression (parse-expression parser)))
     (optional-semicolon parser)
-    (list :expression-statement token expr)))
+    (list :expression-statement token expression)))
 
 (defun prefix-parser-for (kind)
   ;; implicit nil
