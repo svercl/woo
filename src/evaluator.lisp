@@ -158,13 +158,12 @@
         :for evaluated := (evaluate expression env)
         :collect evaluated))
 
-(defun %extend-function-environment (function arguments)
-  (loop :with environment := (make-environment (third function))
-        :with parameters := (second function)
+(defun %extend-function-environment (function-env parameters arguments)
+  (loop :with env := (make-environment function-env)
         :for argument :in arguments
         :for parameter :in parameters
-        :do (set-in environment parameter argument)
-        :finally (return environment)))
+        :do (set-in env parameter argument)
+        :finally (return env)))
 
 (defun %unwrap-return-value (node)
   (if (node-kind= node :return-value)
@@ -172,6 +171,10 @@
       node))
 
 (defun %apply-function (function arguments)
-  (let* ((extended-environment (%extend-function-environment function arguments))
-         (result (evaluate (fourth function) extended-environment)))
-    (%unwrap-return-value result)))
+  (if (node-kind= function :function)
+      (destructuring-bind (name parameters env body) function
+        (declare (ignore name))
+        (let* ((extended-env (%extend-function-environment env parameters arguments))
+               (result (evaluate body extended-env)))
+          (%unwrap-return-value result)))
+      (error "Not a function: ~A" function)))
