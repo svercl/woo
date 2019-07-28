@@ -2,4 +2,4 @@
 
 (defpackage :woo-test
   (:use :cl :woo :fiveam)
-  (:export #:woo))
+  (:export #:run-all))
