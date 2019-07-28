@@ -9,4 +9,5 @@
                 #:switch
                 #:assoc-value)
   (:import-from :serapeum
-                #:whitespacep))
+                #:whitespacep)
+  (:export #:repl))

@@ -1,6 +1,6 @@
 ;;;; woo.asd
 
-(defsystem woo
+(defsystem "woo"
   :author "Brad Svercl <bradsvercl@gmail.com>"
   :maintainer "Brad Svercl <bradsvercl@gmail.com>"
   :license "MIT"

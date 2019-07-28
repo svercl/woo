@@ -1,6 +1,6 @@
 ;;;; woo-test.asd
 
-(defsystem woo-test
+(defsystem "woo-test"
   :author "Brad Svercl <bradsvercl@gmail.com>"
   :license "MIT"
   :depends-on ("woo" "fiveam")
