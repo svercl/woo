@@ -19,7 +19,7 @@
            :type integer)))
 
 (defmethod print-object ((token token) stream)
-  (print-unreadable-object (token stream)
+  (print-unreadable-object (token stream :type t)
     (with-slots (kind literal) token
       (format stream "~A: ~S" kind literal))))
 

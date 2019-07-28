@@ -51,7 +51,7 @@
   (:documentation "Transforms tokens into an AST."))
 
 (defmethod print-object ((parser parser) stream)
-  (print-unreadable-object (parser stream)
+  (print-unreadable-object (parser stream :type t)
     (with-slots (lexer current peek) parser
       (format stream "~A (~A, ~A)" lexer current peek))))
 

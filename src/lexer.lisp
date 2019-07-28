@@ -69,7 +69,7 @@
   (:documentation "Transforms text into tokens."))
 
 (defmethod print-object ((lexer lexer) stream)
-  (print-unreadable-object (lexer stream)
+  (print-unreadable-object (lexer stream :type t)
     (with-slots (current) lexer
       (princ current stream))))
 
@@ -117,8 +117,8 @@
          (read-integer ()
            (collect-while lexer #'digit-char-p))
          (read-string () "")
-         (lookup-identifier (ident)
-           (gethash ident +builtins+ :identifier))
+         (lookup-identifier (identifier)
+           (gethash identifier +builtins+ :identifier))
          (token (kind literal &optional (eat t))
            "Return a token of KIND and LITERAL, maybe advance."
            (prog1 (make-token kind literal)
