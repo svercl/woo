@@ -104,29 +104,31 @@
   (and (node-kind= left kind)
        (node-kind= right kind)))
 
+(defun %evaluate-integer-infix-expresson (operator left right)
+  (macrolet ((make-operator (op &optional bool)
+               `(let* ((function (symbol-function ,op))
+                       (left-value (second left))
+                       (right-value (second right))
+                       (result (funcall function left-value right-value)))
+                  (if ,bool (%from-native result) (list :integer result)))))
+    (switch (operator :test #'equal)
+      ("+" (make-operator '+))
+      ("-" (make-operator '-))
+      ("*" (make-operator '*))
+      ("/" (make-operator '/))
+      ("<" (make-operator '< t))
+      ("<=" (make-operator '<= t))
+      (">" (make-operator '> t))
+      ("==" (make-operator '= t))
+      ("!=" (make-operator '/= t))
+      (t (error "Unknown operator ~A ~A ~A"
+                (first left) operator (first right))))))
+
 (defun evaluate-infix-expression (operator left right env)
   (let ((left (evaluate left env))
         (right (evaluate right env)))
     (if (node-kind=2 left right :integer)
-        ;; Maybe some match (left right) if possible?
-        (macrolet ((make-operator (op &optional bool)
-                     `(let* ((function (symbol-function ,op))
-                             (left-value (second left))
-                             (right-value (second right))
-                             (result (funcall function left-value right-value)))
-                        (if ,bool (%from-native result) (list :integer result)))))
-          (switch (operator :test #'equal)
-            ("+" (make-operator '+))
-            ("-" (make-operator '-))
-            ("*" (make-operator '*))
-            ("/" (make-operator '/))
-            ("<" (make-operator '< t))
-            ("<=" (make-operator '<= t))
-            (">" (make-operator '> t))
-            ("==" (make-operator '= t))
-            ("!=" (make-operator '/= t))
-            (t (error "Unknown operator ~A ~A ~A"
-                      (first left) operator (first right)))))
+        (%evaluate-integer-infix-expression operator left right)
         (switch (operator :test #'equal)
           ("==" (%from-native (equal left right)))
           ("!=" (%from-native (not (equal left right))))
@@ -144,7 +146,7 @@
 
 (defun evaluate-function-literal (parameters body env)
   (let ((parameters (evaluate parameters env)))
-    (list :function (evaluate parameters env) env body)))
+    (list :function parameters env body)))
 
 (defun evaluate-call-expression (left arguments env)
   (let ((function (evaluate left env))
@@ -154,12 +156,11 @@
 (defun %evaluate-expressions (expressions env)
   (loop :for expression :in expressions
         :for evaluated := (evaluate expression env)
-        :collect evaluated :into result
-        :finally (return result)))
+        :collect evaluated))
 
-(defun %extend-function-environment (fun arguments)
-  (loop :with environment := (make-environment (third fun))
-        :with parameters := (second fun)
+(defun %extend-function-environment (function arguments)
+  (loop :with environment := (make-environment (third function))
+        :with parameters := (second function)
         :for argument :in arguments
         :for parameter :in parameters
         :do (set-in environment parameter argument)
