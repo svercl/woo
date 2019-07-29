@@ -26,12 +26,14 @@
     ((list :let-statement _ identifier expression) (evaluate-let-statement identifier expression env))
     ((list :integer-literal _ value) (list :integer value))
     ((list :boolean-literal _ value) (list :boolean value))
+    ((list :function-literal _ parameters body) (list :function parameters env body))
+    ((list :array-literal _ elements) (evaluate-array-literal elements env))
     ((list :prefix-expression _ operator right) (evaluate-prefix-expression operator right env))
     ((list :infix-expression _ operator left right) (evaluate-infix-expression operator left right env))
     ((list :if-expression _ condition consequence alternative) (evaluate-if-expression condition consequence alternative env))
     ((list :identifier _ value) (evaluate-identifier value env))
-    ((list :function-literal _ parameters body) (list :function parameters env body))
-    ((list :call-expression _ left arguments) (evaluate-call-expression left arguments env))))
+    ((list :call-expression _ left arguments) (evaluate-call-expression left arguments env))
+    ((list :index-expression _ left index) (evaluate-index-expression left index env))))
 
 (defun evaluate-program (statements env)
   (loop :for statement :in statements
@@ -41,11 +43,11 @@
         :finally (return result)))
 
 (defun evaluate-block-statement (statements env)
-  (loop :with evaluated-statements := (evaluate statements env)
-        :for statement :in evaluated-statements
-        :until (or (node-kind= statement :return-value)
-                   (node-kind= statement :error))
-        :finally (return statement)))
+  (loop :for statement :in statements
+        :for result := (evaluate statement env)
+        :until (or (node-kind= result :return-value)
+                   (node-kind= result :error))
+        :finally (return result)))
 
 (defun evaluate-return-statement (expression env)
   (alexandria:when-let (value (evaluate expression env))
@@ -55,6 +57,10 @@
   (alexandria:when-let (value (evaluate expression env))
     (let ((name (third identifier)))
       (set-in env name value))))
+
+(defun evaluate-array-literal (elements env)
+  (let ((elements (evaluate-expressions elements env)))
+    (list :array elements)))
 
 (defun evaluate-prefix-expression (operator right env)
   (let ((right (evaluate right env)))
@@ -129,15 +135,24 @@
 
 (defun evaluate-call-expression (left arguments env)
   (let ((function (evaluate left env))
-        (arguments (mapcar #'(lambda (argument)
-                               (evaluate argument env))
-                           arguments)))
+        (arguments (evaluate-expressions arguments env)))
     (trivia:match function
       ((list :function parameters env body)
        (let* ((extended-env (extend-function-environment env parameters arguments))
               (result (evaluate body extended-env)))
          (unwrap-return-value result)))
       (_ (error "Not a function: ~A" function)))))
+
+(defun evaluate-index-expression (left index env)
+  (let ((left (evaluate left env))
+        (index (evaluate index env)))
+    (cond ((and (node-kind= left :array)
+                (node-kind= index :integer))
+           (let ((index (second index))
+                 (elements (second left)))
+             (or (nth index elements) +null-object+)))
+          (t (error "Index operator not supported for ~A"
+                    (node-kind left))))))
 
 (defun extend-function-environment (outer parameters arguments)
   (loop :with inner := (make-environment outer)
@@ -150,3 +165,8 @@
   (trivia:match node
     ((list :return-value value) value)
     (_ node)))
+
+(defun evaluate-expressions (expressions env)
+  (mapcar #'(lambda (expression)
+              (evaluate expression env))
+          expressions))

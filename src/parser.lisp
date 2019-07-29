@@ -3,7 +3,7 @@
 (in-package :woo)
 
 (defparameter +precedences+
-  '(:lowest :equals :comparison :sum :product :prefix :call))
+  '(:lowest :equals :comparison :sum :product :prefix :call :index))
 
 (defun precedence< (this that)
   (< (position this +precedences+)
@@ -20,13 +20,14 @@
     (:minus . :sum)
     (:star . :product)
     (:slash . :product)
-    (:left-paren . :call)))
+    (:left-paren . :call)
+    (:left-bracket . :index)))
 
 (defparameter +infix-kinds+
   '(:plus :minus :star :slash
     :equal :not-equal
     :less-than :less-equal :greater-than :greater-equal
-    :left-paren))
+    :left-paren :left-bracket))
 
 (defclass parser ()
   ((lexer :accessor parser-lexer
@@ -150,7 +151,8 @@
     ((:t :nil) #'parse-boolean-literal)
     (:left-paren #'parse-grouped-expression)
     (:if #'parse-if-expression)
-    (:function #'parse-function-literal)))
+    (:function #'parse-function-literal)
+    (:left-bracket #'parse-array-literal)))
 
 (defun parse-expression (parser &optional (precedence :lowest))
   (loop :with expression = (alexandria:if-let
@@ -247,30 +249,43 @@
                    (expect-peek parser :right-paren)
                    (return (cons identifier identifiers)))))
 
+(defun parse-array-literal (parser)
+  (let ((token (parser-current parser))
+        (elements (parse-expression-list parser :right-bracket)))
+    (list :array-literal token elements)))
+
 (defun parse-infix-expression (parser left)
   (let* ((token (parser-current parser))
          (operator (token-literal token))
          (precedence (token-precedence token)))
-    (if (token-kind= token :left-paren)
-        (parse-call-expression parser left)
-        (progn (next parser)
-               (let ((right (parse-expression parser precedence)))
-                 (list :infix-expression token operator left right))))))
+    (case (token-kind token)
+      (:left-paren (parse-call-expression parser left))
+      (:left-bracket (parse-index-expression parser left))
+      (t (progn (next parser)
+                (let ((right (parse-expression parser precedence)))
+                  (list :infix-expression token operator left right)))))))
 
-(defun parse-call-expression (parser left)
-  (let* ((token (parser-current parser))
-         (arguments (parse-call-arguments parser)))
-    (list :call-expression token left arguments)))
-
-(defun parse-call-arguments (parser)
-  (when (peek-kind= parser :right-paren)
+(defun parse-expression-list (parser &optional (end-kind :right-paren))
+  (when (peek-kind= parser end-kind)
     (next parser)
-    (return-from parse-call-arguments))
+    (return-from parse-expression-list))
   (next parser)
-  (loop :with argument := (parse-expression parser)
+  (loop :with expression := (parse-expression parser)
         :while (peek-kind= parser :comma)
         :do (next parser)
         :do (next parser)
-        :collect (parse-expression parser) :into arguments
-        :finally (progn (expect-peek parser :right-paren)
-                        (return (cons argument arguments)))))
+        :collect (parse-expression parser) :into expressions
+        :finally (progn (expect-peek parser end-kind)
+                        (return (cons expression expressions)))))
+
+(defun parse-call-expression (parser left)
+  (let* ((token (parser-current parser))
+         (arguments (parse-expression-list parser)))
+    (list :call-expression token left arguments)))
+
+(defun parse-index-expression (parser left)
+  (let ((token (parser-current parser)))
+    (next parser)
+    (let ((index (parse-expression parser)))
+      (expect-peek parser :right-bracket)
+      (list :index-expression token left index))))
