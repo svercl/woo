@@ -15,26 +15,7 @@
          (list :boolean value))
      (write-to-string value))
     ((list :null) "null")
-    ((list :return-value value)
-     (inspect-object value))
-    ((list :function _ _ _) "function")))
-
-#+nil
-(defun evaluate (node env)
-  (case (node-kind node)
-    (:program (evaluate-program node env))
-    (:block-statement (evaluate-block-statement node env))
-    (:expression-statement (evaluate (third node) env))
-    (:return-statement (evaluate-return-statement node env))
-    (:let-statement (evaluate-let-statement node env))
-    (:integer-literal (list :integer (third node)))
-    (:boolean-literal (list :boolean (third node)))
-    (:prefix-expression (evaluate-prefix-expression node env))
-    (:infix-expression (evaluate-infix-expression node env))
-    (:if-expression (evaluate-if-expression node env))
-    (:identifier (evaluate-identifier node env))
-    (:function-literal (evaluate-function-literal node env))
-    (:call-expression (evaluate-call-expression node env))))
+    ((list :function _ _ _) "<function>")))
 
 (defun evaluate (node env)
   (trivia:match node
