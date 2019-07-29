@@ -221,7 +221,7 @@
 (defun parse-block-statement (parser &key (begin-kind :left-brace) (end-kind :right-brace))
   (let ((token (parser-current parser)))
     (expect-peek parser begin-kind)
-    ;(next parser)
+    (next parser)
     (loop :for not-end-kind-p := (current-kind/= parser end-kind)
           :for not-eof-p := (current-kind/= parser :eof)
           :while (and not-end-kind-p not-eof-p)
