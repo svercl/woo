@@ -54,10 +54,10 @@
 
 (defun evaluate-program (statements env)
   (loop :for statement :in statements
-        :for value := (evaluate statement env)
-        :when (node-kind= value :return-value)
-          :do (return (second value))
-        :finally (return value)))
+        :for result := (evaluate statement env)
+        :when (node-kind= result :return-value)
+          :do (return (second result))
+        :finally (return result)))
 
 (defun evaluate-block-statement (statements env)
   (loop :with evaluated-statements := (evaluate statements env)

@@ -18,7 +18,8 @@
   (let* ((env (make-environment))
          (program (parse-string text))
          (evaluated (evaluate program env)))
-    (princ (inspect-object evaluated))))
+    (when evaluated
+      (princ (inspect-object evaluated)))))
 
 (defun rpl ()
   "Read print loop."
@@ -36,7 +37,8 @@
       (let* ((text (prompt-read-line))
              (program (parse-string text))
              (evaluated (evaluate program env)))
-        (princ (inspect-object evaluated))))))
+        (when evaluated
+          (princ (inspect-object evaluated)))))))
 
 (defun rep-file (pathname)
   "Read evaluate and print file."
@@ -44,4 +46,5 @@
          (text (alexandria:read-file-into-string pathname))
          (parsed (parse-string text))
          (evaluated (evaluate parsed env)))
-    (princ (inspect-object evaluated))))
+    (when evaluated
+      (princ (inspect-object evaluated)))))
