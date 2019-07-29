@@ -78,9 +78,7 @@
 (defun evaluate-prefix-expression (operator right env)
   (let ((right (evaluate right env)))
     (flet ((bang-operator ()
-             (trivia:match right
-               ((or +false-object+ +null-object+) +true-object+)
-               (_ +false-object+)))
+             (not (truthyp right)))
            (minus-operator ()
              (list :integer (- (second right)))))
       (alexandria:switch (operator :test #'equal)
