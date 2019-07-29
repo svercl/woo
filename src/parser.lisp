@@ -149,16 +149,16 @@
     (:integer #'parse-integer-literal)
     ((:bang :minus) #'parse-prefix-expression)
     ((:t :nil) #'parse-boolean-literal)
+    (:string #'parse-string-literal)
     (:left-paren #'parse-grouped-expression)
     (:if #'parse-if-expression)
     (:function #'parse-function-literal)
     (:left-bracket #'parse-array-literal)))
 
 (defun parse-expression (parser &optional (precedence :lowest))
-  (loop :with expression = (alexandria:if-let
-                               (prefix (prefix-parser-for (current-kind parser)))
-                             (funcall prefix parser)
-                             (return nil))
+  (loop :with expression := (alexandria:when-let
+                                (prefix (prefix-parser-for (current-kind parser)))
+                              (funcall prefix parser))
         :for peek-precedence := (peek-precedence parser)
         :while (and (peek-kind/= parser :semicolon)
                     (precedence< precedence peek-precedence))
@@ -177,10 +177,16 @@
          (value (parse-integer (token-literal token) :junk-allowed t)))
     (list :integer-literal token value)))
 
+(defun parse-string-literal (parser)
+  (let* ((token (parser-current parser))
+         (value (token-literal token)))
+    (list :string-literal token value)))
+
 (defun parse-prefix-expression (parser)
   (let* ((token (parser-current parser))
          (operator (token-literal token)))
-    (next parser) ; skip current (operator)
+    ;; skip prefix
+    (next parser)
     (let ((right (parse-expression parser :prefix)))
       (list :prefix-expression token operator right))))
 
@@ -190,7 +196,8 @@
     (list :boolean-literal token value)))
 
 (defun parse-grouped-expression (parser)
-  (next parser) ; skip (
+  ;; skip :left-paren
+  (next parser)
   (let ((expr (parse-expression parser)))
     (expect-peek parser :right-paren)
     expr))
@@ -204,7 +211,7 @@
     (let ((condition (parse-expression parser)))
       (expect-peek parser :right-paren)
       (let ((consequence (parse-block-statement parser))
-            (alternative nil))
+            alternative)
         (when (peek-kind= parser :else)
           (next parser)
           (setf alternative (parse-block-statement parser)))
@@ -214,7 +221,7 @@
 (defun parse-block-statement (parser &key (begin-kind :left-brace) (end-kind :right-brace))
   (let ((token (parser-current parser)))
     (expect-peek parser begin-kind)
-    (next parser)
+    ;(next parser)
     (loop :for not-end-kind-p := (current-kind/= parser end-kind)
           :for not-eof-p := (current-kind/= parser :eof)
           :while (and not-end-kind-p not-eof-p)

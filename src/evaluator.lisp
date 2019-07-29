@@ -14,6 +14,10 @@
     ((or (list :integer value)
          (list :boolean value))
      (write-to-string value))
+    ((list :return-value value)
+     (inspect-object value))
+    ((list :array elements)
+     (format nil "[~{~A~^, ~}]" (mapcar #'inspect-object elements)))
     ((list :null) "null")
     ((list :function _ _ _) "<function>")))
 
@@ -27,6 +31,7 @@
     ((list :integer-literal _ value) (list :integer value))
     ((list :boolean-literal _ value) (list :boolean value))
     ((list :function-literal _ parameters body) (list :function parameters env body))
+    ((list :string-literal _ value) (list :string value))
     ((list :array-literal _ elements) (evaluate-array-literal elements env))
     ((list :prefix-expression _ operator right) (evaluate-prefix-expression operator right env))
     ((list :infix-expression _ operator left right) (evaluate-infix-expression operator left right env))
