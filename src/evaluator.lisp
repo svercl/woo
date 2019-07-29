@@ -78,7 +78,6 @@
 (defun evaluate-prefix-expression (operator right env)
   (let ((right (evaluate right env)))
     (flet ((bang-operator ()
-             ;; NOTE: Can we use a combination of #'not #'truthyp #'boolean-to-object?
              (trivia:match right
                ((or +false-object+ +null-object+) +true-object+)
                (_ +false-object+)))
