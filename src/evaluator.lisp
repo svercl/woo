@@ -17,7 +17,7 @@
     ((list :null) "null")
     ((list :return-value value)
      (inspect-object value))
-    ((list :function "function"))))
+    ((list :function _ _ _) "function")))
 
 #+nil
 (defun evaluate (node env)
