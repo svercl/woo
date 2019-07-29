@@ -19,6 +19,7 @@ It is because the minus operator is always considered to be prefix
 * Parser
 ** DONE Use ~position~ instead for precedence table
 ** DONE Call expressions
+** TODO Fix ~parse-expression-list~
 ** TODO Do not signal errors from lisp
 ** TODO Signal an error in ~parse-expression~ when we can't find a prefix
 ** TODO Fix ~parse-function-literal~
