@@ -21,13 +21,13 @@
 (defmethod print-object ((token token) stream)
   (print-unreadable-object (token stream :type t)
     (with-slots (kind literal) token
-      (format stream "~A: ~S" kind literal))))
+      (format stream "~S: ~S" kind literal))))
 
 (defun make-token (kind literal)
   (make-instance 'token :kind kind :literal literal))
 
 (defmethod token-precedence ((token token))
-  (or (assoc-value +token-precedences+ (token-kind token)) :lowest))
+  (or (serapeum:assocdr (token-kind token) +token-precedences+) :lowest))
 
 (defmethod token= ((this token) (that token))
   (and (eq (token-kind this)

@@ -49,7 +49,7 @@
     ((list :infix-expression _ operator left right) (evaluate-infix-expression operator left right env))
     ((list :if-expression _ condition consequence alternative) (evaluate-if-expression condition consequence alternative env))
     ((list :identifier _ value) (evaluate-identifier value env))
-    ((list :function-literal _ parameters body) (evaluate-function-literal parameters body env))
+    ((list :function-literal _ parameters body) (list :function parameters env body))
     ((list :call-expression _ left arguments) (evaluate-call-expression left arguments env))))
 
 (defun evaluate-program (statements env)
@@ -67,12 +67,12 @@
         :finally (return statement)))
 
 (defun evaluate-return-statement (expression env)
-  (when-let (value (evaluate expression env))
+  (alexandria:when-let (value (evaluate expression env))
     (list :return-value value)))
 
 (defun evaluate-let-statement (identifier expression env)
-  (when-let (value (evaluate expression env))
-    (let ((name (token-literal (second identifier))))
+  (alexandria:when-let (value (evaluate expression env))
+    (let ((name (third identifier)))
       (set-in env name value))))
 
 (defun evaluate-prefix-expression (operator right env)
@@ -83,12 +83,12 @@
                (_ +false-object+)))
            (minus-operator ()
              (list :integer (- (second right)))))
-      (switch (operator :test #'equal)
+      (alexandria:switch (operator :test #'equal)
         ("!" (bang-operator))
         ("-" (minus-operator))
         (t (error "Unknown operator ~A~A" operator right))))))
 
-(defun %from-native (test)
+(defun boolean-to-object (test)
   (if test +true-object+ +false-object+))
 
 (defun truthyp (node)
@@ -109,8 +109,8 @@
                        (left-value (second left))
                        (right-value (second right))
                        (result (funcall function left-value right-value)))
-                  (if ,bool (%from-native result) (list :integer result)))))
-    (switch (operator :test #'equal)
+                  (if ,bool (boolean-to-object result) (list :integer result)))))
+    (alexandria:switch (operator :test #'equal)
       ("+" (make-operator '+))
       ("-" (make-operator '-))
       ("*" (make-operator '*))
@@ -128,51 +128,44 @@
         (right (evaluate right env)))
     (if (node-kind=2 left right :integer)
         (%evaluate-integer-infix-expression operator left right)
-        (switch (operator :test #'equal)
-          ("==" (%from-native (equal left right)))
-          ("!=" (%from-native (not (equal left right))))
+        (alexandria:switch (operator :test #'equal)
+          ("==" (boolean-to-object (equal left right)))
+          ("!=" (boolean-to-object (not (equal left right))))
           (t (error "Unknown operator ~A ~A ~A"
                     (node-kind left) operator (node-kind right)))))))
 
 (defun evaluate-if-expression (condition consequence alternative env)
   (let ((condition (evaluate condition env)))
-    (cond ((truthyp condition) (evaluate consequence env))
-          (alternative (evaluate alternative env))
-          (t +null-object+))))
+    ;; NOTE: cond seems better here, but SBCL does not agree.
+    (if (truthyp condition)
+        (evaluate consequence env)
+        (if alternative
+            (evaluate alternative env)
+            +null-object+))))
 
 (defun evaluate-identifier (value env)
   (get-from env value))
 
-(defun evaluate-function-literal (parameters body env)
-  (let ((parameters (evaluate parameters env)))
-    (list :function parameters env body)))
-
 (defun evaluate-call-expression (left arguments env)
   (let ((function (evaluate left env))
-        (arguments (%evaluate-expressions arguments env)))
-    (%apply-function function arguments)))
+        (arguments (mapcar #'(lambda (argument)
+                               (evaluate argument env))
+                           arguments)))
+    (trivia:match function
+      ((list :function parameters env body)
+       (let* ((extended-env (extend-function-environment env parameters arguments))
+              (result (evaluate body extended-env)))
+         (unwrap-return-value result)))
+      (_ (error "Not a function: ~A" function)))))
 
-(defun %evaluate-expressions (expressions env)
-  (loop :for expression :in expressions
-        :for evaluated := (evaluate expression env)
-        :collect evaluated))
-
-(defun %extend-function-environment (function-env parameters arguments)
-  (loop :with env := (make-environment function-env)
-        :for argument :in arguments
+(defun extend-function-environment (outer parameters arguments)
+  (loop :with inner := (make-environment outer)
         :for parameter :in parameters
-        :do (set-in env parameter argument)
-        :finally (return env)))
+        :for argument :in arguments
+        :do (set-in inner parameter argument)
+        :finally (return inner)))
 
-(defun %unwrap-return-value (node)
-  (if (node-kind= node :return-value)
-      (second node)
-      node))
-
-(defun %apply-function (function arguments)
-  (trivia:match function
-    ((list _ parameters env body)
-     (let* ((extended-env (%extend-function-environment env parameters arguments))
-            (result (evaluate body extended-env)))
-       (%unwrap-return-value result)))
-    (_ (error "Not a function: ~A" function))))
+(defun unwrap-return-value (node)
+  (trivia:match node
+    ((list :return-value value) value)
+    (_ node)))

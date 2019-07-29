@@ -5,12 +5,7 @@
 (defparameter +precedences+
   '(:lowest :equals :comparison :sum :product :prefix :call))
 
-(deftype precedence ()
-  `(member ,@+precedences+))
-
 (defun precedence< (this that)
-  (check-type this precedence)
-  (check-type that precedence)
   (< (position this +precedences+)
      (position that +precedences+)))
 
@@ -157,9 +152,8 @@
     (:function #'parse-function-literal)))
 
 (defun parse-expression (parser &optional (precedence :lowest))
-  ;; we convert it into an integer inside the loop
-  (check-type precedence keyword)
-  (loop :with expression = (if-let (prefix (prefix-parser-for (current-kind parser)))
+  (loop :with expression = (alexandria:if-let
+                               (prefix (prefix-parser-for (current-kind parser)))
                              (funcall prefix parser)
                              (return nil))
         :for peek-precedence := (peek-precedence parser)

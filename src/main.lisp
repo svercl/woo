@@ -14,23 +14,29 @@
          (program (parse-program parser)))
     program))
 
+(defun evaluate-string (text)
+  (let* ((env (make-environment))
+         (program (parse-string text))
+         (evaluated (evaluate program env)))
+    (princ (inspect-object evaluated))))
+
 (defun rpl ()
   "Read print loop."
   (loop
+    (fresh-line)
     (let* ((text (prompt-read-line))
-           (parsed (parse-string text)))
-      (pprint parsed)
-      (terpri))))
+           (program (parse-string text)))
+      (pprint program))))
 
 (defun repl ()
   "Read evaluate print loop."
   (let ((env (make-environment)))
     (loop
+      (fresh-line)
       (let* ((text (prompt-read-line))
-             (parsed (parse-string text)))
-        (when-let (evaluated (evaluate parsed env))
-          (princ (inspect-object evaluated)))
-        (terpri)))))
+             (program (parse-string text))
+             (evaluated (evaluate program env)))
+        (princ (inspect-object evaluated))))))
 
 (defun rep-file (pathname)
   "Read evaluate and print file."

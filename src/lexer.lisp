@@ -3,7 +3,7 @@
 (in-package :woo)
 
 (defparameter +builtins+
-  (alist-hash-table
+  (alexandria:alist-hash-table
    '(("fn" . :function)
      ("elif" . :elif)
      ("else" . :else)
@@ -16,7 +16,7 @@
    :test #'equal))
 
 (defparameter +simple-tokens+
-  (alist-hash-table
+  (alexandria:alist-hash-table
    '((#\+ . :plus)
      (#\- . :minus)
      (#\* . :star)
@@ -44,7 +44,7 @@
   "single character tokens")
 
 (defparameter +two-char-tokens+
-  (alist-hash-table
+  (alexandria:alist-hash-table
    '(("==" . :equal)
      ("!=" . :not-equal)
      ("<=" . :less-equal)
@@ -105,7 +105,7 @@
 (defmethod skip-whitespace ((lexer lexer))
   (loop :for char := (lexer-current lexer)
         :while (or (null char)
-                   (whitespacep char))
+                   (serapeum:whitespacep char))
         :do (advance lexer)))
 
 (defmethod next-token ((lexer lexer))
