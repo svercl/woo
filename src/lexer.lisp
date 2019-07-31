@@ -39,6 +39,7 @@
      (#\; . :semicolon)
      (#\& . :ampersand)
      (#\# . :hash)
+     (#\, . :comma)
      (#\@ . :at)
      (#\Nul . :eof)))
   "single character tokens")
