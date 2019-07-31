@@ -128,12 +128,9 @@
 
 (defun evaluate-if-expression (condition consequence alternative env)
   (let ((condition (evaluate condition env)))
-    ;; NOTE: cond seems better here, but SBCL does not agree.
-    (if (truthyp condition)
-        (evaluate consequence env)
-        (if alternative
-            (evaluate alternative env)
-            +null-object+))))
+    (cond ((truthyp condition) (evaluate consequence env))
+          ((listp alternative) (evaluate alternative env))
+          (t +null-object+))))
 
 (defun evaluate-identifier (value env)
   (get-from env value))
