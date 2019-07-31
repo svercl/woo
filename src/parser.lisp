@@ -37,13 +37,16 @@
    (current :accessor parser-current
             :initarg :current
             :initform (make-token :illegal "illegal")
-            :type token)
+            :type token
+            :documentation "The token we are currently sitting on.")
    (peek :accessor parser-peek
          :initform (make-token :illegal "illegal")
-         :type token)
+         :type token
+         :documentation "The token next to the current.")
    (errors :accessor parser-errors
            :initform nil
-           :type (or null list)))
+           :type (or null list)
+           :documentation "The errors we've encountered along the way."))
   (:documentation "Transforms tokens into an AST."))
 
 (defmethod print-object ((parser parser) stream)
@@ -52,7 +55,7 @@
       (format stream "~A (~A, ~A)" lexer current peek))))
 
 (defun make-parser (lexer)
-  "Create a parser using LEXER."
+  "Create a parser with LEXER."
   (make-instance 'parser :lexer lexer))
 
 (defmethod initialize-instance :after ((parser parser) &key)
@@ -101,6 +104,7 @@
   (token-precedence (parser-peek parser)))
 
 (defmethod optional-semicolon ((parser parser))
+  "Skip semicolon if we're sitting on one."
   (when (peek-kind= parser :semicolon)
     (next parser)))
 
@@ -138,6 +142,7 @@
       (list :return-statement token expression))))
 
 (defun parse-expression-statement (parser)
+  "Parse an expression disguised as a statement."
   (let* ((token (parser-current parser))
          (expression (parse-expression parser)))
     (optional-semicolon parser)
@@ -157,6 +162,7 @@
     (:left-bracket #'parse-array-literal)))
 
 (defun parse-expression (parser &optional (precedence :lowest))
+  "The meat of parsing. Decides whether to parse prefix or infix."
   (loop :with expression := (alexandria:when-let
                                 (prefix (prefix-parser-for (current-kind parser)))
                               (funcall prefix parser))
@@ -223,9 +229,8 @@
   (let ((token (parser-current parser)))
     (expect-peek parser begin-kind)
     (next parser)
-    (loop :for not-end-kind-p := (current-kind/= parser end-kind)
-          :for not-eof-p := (current-kind/= parser :eof)
-          :while (and not-end-kind-p not-eof-p)
+    (loop :for kind := (current-kind parser)
+          :until (member kind (list end-kind :eof))
           :for statement := (parse-statement parser)
           :when statement
             :collect statement :into statements
@@ -246,8 +251,8 @@
   (unless-do (peek-kind= parser :right-paren)
     (loop :for identifier := (parse-identifier parser)
           :while (peek-kind= parser :comma)
-          :do (next parser 2)
           :collect identifier :into identifiers
+          :do (next parser 2)
           :finally (expect-peek parser :right-paren)
                    (return identifiers))
     :unconditional (next parser)))
@@ -272,8 +277,8 @@
   (unless-do (peek-kind= parser end-kind)
     (loop :for expression := (parse-expression parser)
           :while (peek-kind= parser delimiter-kind)
-          :do (next parser 2)
           :collect expression :into expressions
+          :do (next parser 2)
           :finally (expect-peek parser end-kind)
                    (return expressions))
     :unconditional (next parser)))
