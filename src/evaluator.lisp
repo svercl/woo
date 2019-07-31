@@ -146,6 +146,8 @@
        (let* ((extended-env (extend-function-environment env parameters arguments))
               (result (evaluate body extended-env)))
          (unwrap-return-value result)))
+      ((list :builtin lam)
+       (funcall lam arguments))
       (_ (error "Not a function: ~A" function)))))
 
 (defun evaluate-index-expression (left index env)

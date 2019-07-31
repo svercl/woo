@@ -31,6 +31,7 @@
 (defun repl ()
   "Read evaluate print loop."
   (let ((env (make-environment)))
+    (add-builtins env)
     (loop
       (fresh-line)
       (let* ((text (prompt-read-line))
