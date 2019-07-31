@@ -59,14 +59,15 @@
   (dotimes (x 2)
     (next parser)))
 
-(defmethod next ((parser parser))
+(defmethod next ((parser parser) &optional (amount 1))
   "Advance the PARSER."
   (with-accessors ((lexer parser-lexer)
                    (current parser-current)
                    (peek parser-peek))
       parser
-    (setf current peek
-          peek (next-token lexer))))
+    (dotimes (x amount)
+      (setf current peek
+            peek (next-token lexer)))))
 
 ;;; Shorthand methods.
 (defmethod current-kind ((parser parser))
@@ -228,7 +229,7 @@
           :for statement := (parse-statement parser)
           :when statement
             :collect statement :into statements
-            :and :do (next parser)
+            :and :do (next parser) ; statement
           :finally (return (list :block-statement token statements)))))
 
 ;; "fn" FN-PARAMS BLOCK
@@ -242,17 +243,14 @@
 ;; "(" ( IDENTIFIER ?"," )* ")"
 (defun parse-function-parameters (parser)
   (expect-peek parser :left-paren)
-  ;; no parameters
-  (if (peek-kind= parser :right-paren)
-      (progn (next parser) nil)
-      (progn (next parser)
-             (loop :for identifier := (parse-identifier parser)
-                   :while (peek-kind= parser :comma)
-                   :do (next parser) ; comma
-                   :do (next parser)
-                   :collect identifier :into identifiers
-                   :finally (expect-peek parser :right-paren)
-                            (return identifiers)))))
+  (unless-do (peek-kind= parser :right-paren)
+    (loop :for identifier := (parse-identifier parser)
+          :while (peek-kind= parser :comma)
+          :do (next parser 2)
+          :collect identifier :into identifiers
+          :finally (expect-peek parser :right-paren)
+                   (return identifiers))
+    :unconditional (next parser)))
 
 (defun parse-array-literal (parser)
   (let ((token (parser-current parser))
@@ -271,16 +269,14 @@
                   (list :infix-expression token operator left right)))))))
 
 (defun parse-expression-list (parser &optional (end-kind :right-paren) (delimiter-kind :comma))
-  (if (peek-kind= parser end-kind)
-      (progn (next parser) nil)
-      (progn (next parser)
-             (loop :for expression := (parse-expression parser)
-                   :while (peek-kind= parser delimiter-kind)
-                   :do (next parser) ; delimiter
-                   :do (next parser)
-                   :collect expression :into expressions
-                   :finally (expect-peek parser end-kind)
-                            (return expressions)))))
+  (unless-do (peek-kind= parser end-kind)
+    (loop :for expression := (parse-expression parser)
+          :while (peek-kind= parser delimiter-kind)
+          :do (next parser 2)
+          :collect expression :into expressions
+          :finally (expect-peek parser end-kind)
+                   (return expressions))
+    :unconditional (next parser)))
 
 (defun parse-call-expression (parser left)
   (let* ((token (parser-current parser))

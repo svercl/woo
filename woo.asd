@@ -16,7 +16,8 @@
                  (:file "token")
                  (:file "parser")
                  (:file "environment")
-                 (:file "evaluator"))))
+                 (:file "evaluator")
+                 (:file "utility"))))
   :description "A programming language."
   :in-order-to ((test-op (test-op "woo-test")))
   :build-operation "program-op"
