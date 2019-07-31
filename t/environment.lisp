@@ -1,4 +1,4 @@
-;;;; symbol-table.lisp
+;;;; environment.lisp
 
 (in-package :woo-test)
 

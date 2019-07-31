@@ -11,5 +11,6 @@
                  (:file "suite")
                  (:file "environment")
                  (:file "lexer")
-                 (:file "parser"))))
+                 (:file "parser")
+                 (:file "evaluator"))))
   :perform (test-op (o c) (symbol-call :woo-test '#:run-all)))
