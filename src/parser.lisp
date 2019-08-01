@@ -249,13 +249,13 @@
 (defun parse-function-parameters (parser)
   (expect-peek parser :left-paren)
   (unless-do (peek-kind= parser :right-paren)
-    (loop :for identifier := (parse-identifier parser)
-          :while (peek-kind= parser :comma)
-          :collect identifier :into identifiers
-          :do (next parser 2)
-          :finally (expect-peek parser :right-paren)
-                   (return identifiers))
-    :unconditional (next parser)))
+      (loop :for identifier := (parse-identifier parser)
+            :while (peek-kind= parser :comma)
+            :collect identifier :into identifiers
+            :do (next parser 2)
+            :finally (expect-peek parser :right-paren)
+                     (return identifiers))
+    (next parser)))
 
 (defun parse-array-literal (parser)
   (let ((token (parser-current parser))
@@ -275,13 +275,13 @@
 
 (defun parse-expression-list (parser &optional (end-kind :right-paren) (delimiter-kind :comma))
   (unless-do (peek-kind= parser end-kind)
-    (loop :for expression := (parse-expression parser)
-          :while (peek-kind= parser delimiter-kind)
-          :collect expression :into expressions
-          :do (next parser 2)
-          :finally (expect-peek parser end-kind)
-                   (return expressions))
-    :unconditional (next parser)))
+      (loop :for expression := (parse-expression parser)
+            :while (peek-kind= parser delimiter-kind)
+            :collect expression :into expressions
+            :do (next parser 2)
+            :finally (expect-peek parser end-kind)
+                     (return expressions))
+    (next parser)))
 
 (defun parse-call-expression (parser left)
   (let* ((token (parser-current parser))
