@@ -108,6 +108,7 @@
                           :collect `(,string (make-operator ,function ,boolean)))
                   (t (error "Unknown operator ~A ~A ~A"
                             (first left) operator (first right))))))
+    ;; NOTE: We can do better than this, but this'll do great for now.
     (make-operator-map (("+" '+ nil)
                         ("-" '- nil)
                         ("*" '* nil)
@@ -154,13 +155,13 @@
 (defun evaluate-index-expression (left index env)
   (let ((left (evaluate left env))
         (index (evaluate index env)))
-    (cond ((and (node-kind= left :array)
-                (node-kind= index :integer))
-           (let ((index (second index))
-                 (elements (second left)))
-             (or (nth index elements) +null-object+)))
-          (t (error "Index operator not supported for ~A"
-                    (node-kind left))))))
+    (if (and (node-kind= left :array)
+             (node-kind= index :integer))
+        (let ((index (second index))
+              (elements (second left)))
+          (or (nth index elements) +null-object+))
+        (error "Index operator not supported for ~A"
+               (node-kind left)))))
 
 (defun extend-function-environment (outer parameters arguments)
   (loop :with inner := (make-environment outer)
