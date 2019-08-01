@@ -15,30 +15,32 @@
                (parse-program)))
 
 (defun evaluate-string (text &optional outer)
-  (let* ((env (or outer (make-environment)))
-         (program (parse-string text))
-         (evaluated (evaluate program env)))
-    (princ (inspect-object evaluated))))
+  (let ((env (or outer (make-environment))))
+    (serapeum:~> text
+                 (parse-string)
+                 (evaluate _ env)
+                 (inspect-object))))
 
 (defun rpl ()
   "Read print loop."
   (loop
     (fresh-line)
-    (let* ((text (prompt-read-line))
-           (program (parse-string text)))
-      (pprint program))))
+    (serapeum:~> (prompt-read-line)
+                 (parse-string)
+                 (pprint))))
 
 (defun repl ()
   "Read evaluate print loop."
   (let ((env (make-environment)))
     (loop
       (fresh-line)
-      (let* ((text (prompt-read-line))
-             (evaluated (evaluate-string text env)))
-        (princ (inspect-object evaluated))))))
+      (serapeum:~> (prompt-read-line)
+                   (evaluate-string _ env)
+                   (princ)))))
 
 (defun rep-file (pathname)
   "Read evaluate and print file."
-  (let* ((text (alexandria:read-file-into-string pathname))
-         (evaluated (evaluate-string text)))
-    (princ (inspect-object evaluated))))
+  (serapeum:~> pathname
+               (alexandria:read-file-into-string)
+               (evaluate-string)
+               (princ)))

@@ -1,6 +1,6 @@
 * REPL
 ** DONE Fix prompt
-** TODO Catch Ctrl+C, and friends
+** TODO Catch Ctrl+C and friends
 Maybe use a readline type library?
 * Lexer
 ** DONE Strings
@@ -25,4 +25,4 @@ It is because the minus operator is always considered to be prefix
 ** TODO Do not signal errors from lisp
 ** TODO Signal an error in ~parse-expression~ when we can't find a prefix
 ** TODO Fix ~parse-function-literal~
-*** TODO Fix ~parse-function-parameters~
+** TODO Fix ~parse-function-parameters~
