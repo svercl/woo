@@ -3,9 +3,10 @@
 ** TODO Catch Ctrl+C, and friends
 Maybe use a readline type library?
 * Lexer
+** DONE Strings
 ** TODO Handle different base numbers
 ** TODO Token positions
-** TODO Strings
+** TODO String escapes
 ** TODO I hate the way multiple character tokens are implemented
 * Evaluator
 ** DONE Fix precedence
