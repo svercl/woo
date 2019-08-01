@@ -17,6 +17,7 @@ The environment was being reset every loop
 It is because the minus operator is always considered to be prefix
 ** TODO Print blocks correctly
 ** TODO Fix ~inspect-object~ for function
+** TODO Indexing strings
 * Parser
 ** DONE Use ~position~ instead for precedence table
 ** DONE Call expressions

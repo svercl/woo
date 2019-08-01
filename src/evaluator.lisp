@@ -159,7 +159,6 @@
 (defun evaluate-index-expression (left index env)
   (let ((left (evaluate left env))
         (index (evaluate index env)))
-    ;; trivia:match (left index) possible?
     (trivia:match (values left index)
       ((list :array elements) (list :integer index)
        (or (nth index elements) +null-object+))
