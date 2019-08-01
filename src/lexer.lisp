@@ -57,16 +57,20 @@
 (defclass lexer ()
   ((text :reader lexer-text
          :initarg :text
-         :type string)
+         :type string
+         :documentation "The input text.")
    (position :accessor lexer-position
              :initform 0
-             :type integer)
+             :type integer
+             :documentation "Where we are right now.")
    (read-position :accessor lexer-read-position
                   :initform 0
-                  :type integer)
+                  :type integer
+                  :documentation "Next to where we are right now.")
    (current :accessor lexer-current
             :initform nil
-            :type (or null character)))
+            :type (or null character)
+            :documentation "The character we are sitting on."))
   (:documentation "Transforms text into tokens."))
 
 (defmethod print-object ((lexer lexer) stream)
@@ -94,20 +98,18 @@
           position read-position)
     (incf read-position)))
 
-(defmethod collect-while ((lexer lexer) pred)
+(defmethod collect-while ((lexer lexer) pred &key no-start)
   "Advance and collect the current character while PRED holds."
   (loop :with start := (lexer-position lexer)
         :for position := (lexer-position lexer)
         :for current := (lexer-current lexer)
-        :while (funcall pred current)
+        :while (or (null current)
+                   (funcall pred current))
         :do (advance lexer)
-        :finally (return (subseq (lexer-text lexer) start position))))
+        :finally (return (or no-start (subseq (lexer-text lexer) start position)))))
 
 (defmethod skip-whitespace ((lexer lexer))
-  (loop :for char := (lexer-current lexer)
-        :while (or (null char)
-                   (serapeum:whitespacep char))
-        :do (advance lexer)))
+  (collect-while lexer #'serapeum:whitespacep :no-start t))
 
 (defmethod next-token ((lexer lexer))
   (flet ((read-identifier ()

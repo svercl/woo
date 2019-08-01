@@ -145,7 +145,11 @@
         (arguments (evaluate-expressions arguments env)))
     (trivia:match function
       ((list :function parameters env body)
-       (let* ((extended-env (extend-function-environment env parameters arguments))
+       (let* ((extended-env (loop :with inner := (make-environment env)
+                                  :for parameter :in parameters
+                                  :for argument :in arguments
+                                  :do (set-in inner parameter argument)
+                                  :finally (return inner)))
               (result (evaluate body extended-env)))
          (unwrap-return-value result)))
       ((list :builtin lam)
@@ -155,20 +159,12 @@
 (defun evaluate-index-expression (left index env)
   (let ((left (evaluate left env))
         (index (evaluate index env)))
-    (if (and (node-kind= left :array)
-             (node-kind= index :integer))
-        (let ((index (second index))
-              (elements (second left)))
-          (or (nth index elements) +null-object+))
-        (error "Index operator not supported for ~A"
-               (node-kind left)))))
-
-(defun extend-function-environment (outer parameters arguments)
-  (loop :with inner := (make-environment outer)
-        :for parameter :in parameters
-        :for argument :in arguments
-        :do (set-in inner parameter argument)
-        :finally (return inner)))
+    ;; trivia:match (left index) possible?
+    (trivia:match (values left index)
+      ((list :array elements) (list :integer index)
+       (or (nth index elements) +null-object+))
+      (_ (error "Index operator not supported for ~A"
+                (node-kind left))))))
 
 (defun unwrap-return-value (node)
   (trivia:match node

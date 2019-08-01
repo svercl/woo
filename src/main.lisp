@@ -9,13 +9,13 @@
 
 (defun parse-string (text)
   "Take a string and parse it."
-  (let* ((lexer (make-lexer text))
-         (parser (make-parser lexer))
-         (program (parse-program parser)))
-    program))
+  (serapeum:~> text
+               (make-lexer)
+               (make-parser)
+               (parse-program)))
 
-(defun evaluate-string (text)
-  (let* ((env (make-environment))
+(defun evaluate-string (text &optional outer)
+  (let* ((env (or outer (make-environment)))
          (program (parse-string text))
          (evaluated (evaluate program env)))
     (princ (inspect-object evaluated))))
@@ -31,18 +31,14 @@
 (defun repl ()
   "Read evaluate print loop."
   (let ((env (make-environment)))
-    (add-builtins env)
     (loop
       (fresh-line)
       (let* ((text (prompt-read-line))
-             (program (parse-string text))
-             (evaluated (evaluate program env)))
+             (evaluated (evaluate-string text env)))
         (princ (inspect-object evaluated))))))
 
 (defun rep-file (pathname)
   "Read evaluate and print file."
-  (let* ((env (make-environment))
-         (text (alexandria:read-file-into-string pathname))
-         (parsed (parse-string text))
-         (evaluated (evaluate parsed env)))
+  (let* ((text (alexandria:read-file-into-string pathname))
+         (evaluated (evaluate-string text)))
     (princ (inspect-object evaluated))))

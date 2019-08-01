@@ -13,6 +13,9 @@
 (defun make-environment (&optional outer)
   (make-instance 'environment :outer outer))
 
+(defmethod initialize-instance :after ((env environment) &key)
+  (add-builtins env))
+
 (defmethod add-builtins ((env environment))
   (macrolet ((builtin (name &body body)
                `(set-in env ,name (list :builtin #'(lambda (args) ,@body)))))
