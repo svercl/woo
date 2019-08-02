@@ -104,21 +104,15 @@
                   (if ,bool (boolean-to-object result) (list :integer result))))
              (make-operator-map (map)
                `(alexandria:switch (operator :test #'equal)
-                  ,@(loop :for (string function boolean) :in map
+                  ,@(loop :for (string function &optional boolean) :in map
                           :collect `(,string (make-operator ,function ,boolean)))
                   (t (error "Unknown operator ~A ~A ~A"
                             (first left) operator (first right))))))
     ;; NOTE: We can do better than this, but this'll do great for now.
-    (make-operator-map (("+" '+ nil)
-                        ("-" '- nil)
-                        ("*" '* nil)
-                        ("/" '/ nil)
-                        ("<" '< t)
-                        ("<=" '<= t)
-                        (">" '> t)
-                        (">=" '>= t)
-                        ("==" '= t)
-                        ("!=" '/= t)))))
+    (make-operator-map (("+" '+) ("-" '-) ("*" '*) ("/" '/)
+                        ("<" '< t) ("<=" '<= t)
+                        (">" '> t) (">=" '>= t)
+                        ("==" '= t) ("!=" '/= t)))))
 
 (defun evaluate-infix-expression (operator left right env)
   (let ((left (evaluate left env))
