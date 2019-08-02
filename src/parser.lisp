@@ -52,18 +52,19 @@
 (defmethod print-object ((parser parser) stream)
   (print-unreadable-object (parser stream :type t)
     (with-slots (lexer current peek) parser
-      (format stream "~A (~A, ~A)" lexer current peek))))
+      (format stream "~A Current: ~A Peek: ~A" lexer current peek))))
 
 (defun make-parser (lexer)
   "Create a parser with LEXER."
   (make-instance 'parser :lexer lexer))
 
 (defmethod initialize-instance :after ((parser parser) &key)
-  (dotimes (x 2)
-    (next parser)))
+  (next parser 2))
 
 (defmethod next ((parser parser) &optional (amount 1))
   "Advance the PARSER."
+  (check-type amount integer)
+  (assert (>= amount 1))
   (with-accessors ((lexer parser-lexer)
                    (current parser-current)
                    (peek parser-peek))
@@ -125,9 +126,9 @@
 ;; "let" IDENTIFIER "=" EXPRESSION ?";"
 (defun parse-let-statement (parser)
   (let ((token (parser-current parser)))
-    (expect-peek parser :identifier)
+    (expect-peek parser :identifier) ; "let"
     (let ((identifier (parse-identifier parser)))
-      (expect-peek parser :assign)
+      (expect-peek parser :assign) ; "="
       (next parser)
       (let ((expression (parse-expression parser)))
         (optional-semicolon parser)
@@ -136,16 +137,16 @@
 ;; "return" EXPRESSION ?";"
 (defun parse-return-statement (parser)
   (let ((token (parser-current parser)))
-    (next parser) ; skip "return"
+    (next parser) ; "return"
     (let ((expression (parse-expression parser)))
-      (optional-semicolon parser)
+      (optional-semicolon parser) ; ?";"
       (list :return-statement token expression))))
 
 (defun parse-expression-statement (parser)
   "Parse an expression disguised as a statement."
   (let* ((token (parser-current parser))
          (expression (parse-expression parser)))
-    (optional-semicolon parser)
+    (optional-semicolon parser) ; ?";"
     (list :expression-statement token expression)))
 
 (defun prefix-parser-for (kind)
@@ -161,6 +162,7 @@
     (:function #'parse-function-literal)
     (:left-bracket #'parse-array-literal)))
 
+(serapeum:-> parse-expression (parser &optional keyword) list)
 (defun parse-expression (parser &optional (precedence :lowest))
   "The meat of parsing. Decides whether to parse prefix or infix."
   (loop :with expression := (alexandria:when-let
@@ -202,11 +204,11 @@
          (value (current-kind/= parser :nil)))
     (list :boolean-literal token value)))
 
+;; "(" EXPRESSION ")"
 (defun parse-grouped-expression (parser)
-  ;; skip :left-paren
-  (next parser)
+  (next parser) ; "("
   (let ((expr (parse-expression parser)))
-    (expect-peek parser :right-paren)
+    (expect-peek parser :right-paren) ; ")"
     expr))
 
 ;; "if" "(" EXPRESSION ")" BLOCK
@@ -248,7 +250,7 @@
 ;; "(" ( IDENTIFIER ?"," )* ")"
 (defun parse-function-parameters (parser)
   (expect-peek parser :left-paren)
-  (unless-do (peek-kind= parser :right-paren)
+  (when-do (peek-kind/= parser :right-paren)
       (loop :for identifier := (parse-identifier parser)
             :while (peek-kind= parser :comma)
             :collect identifier :into identifiers
@@ -274,7 +276,7 @@
                   (list :infix-expression token operator left right)))))))
 
 (defun parse-expression-list (parser &optional (end-kind :right-paren) (delimiter-kind :comma))
-  (unless-do (peek-kind= parser end-kind)
+  (when-do (peek-kind/= parser end-kind)
       (loop :for expression := (parse-expression parser)
             :while (peek-kind= parser delimiter-kind)
             :collect expression :into expressions

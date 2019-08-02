@@ -21,7 +21,7 @@
 (defmethod print-object ((token token) stream)
   (print-unreadable-object (token stream :type t)
     (with-slots (kind literal) token
-      (format stream "~S: ~S" kind literal))))
+      (format stream "Kind: ~S Literal: ~S" kind literal))))
 
 (defun make-token (kind literal)
   (make-instance 'token :kind kind :literal literal))
