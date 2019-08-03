@@ -153,16 +153,17 @@
 (defun evaluate-index-expression (left index env)
   (let ((left (evaluate left env))
         (index (evaluate index env)))
-    (trivia:match (values left index)
-      ((list :array elements) (list :integer index)
-       (or (nth index elements) +null-object+))
+    (trivia:match left
+      ;; Check that ~index~ is actually an :integer
+      ((list :array elements)
+       (or (nth (second index) elements) +null-object+))
       (_ (error "Index operator not supported for ~A"
                 (node-kind left))))))
 
 (defun unwrap-return-value (node)
-  (trivia:match node
-    ((list :return-value value) value)
-    (_ node)))
+  (if (node-kind= node :return-value)
+      (second node)
+      node))
 
 (defun evaluate-expressions (expressions env)
   (mapcar #'(lambda (expression)
