@@ -95,24 +95,26 @@
   (and (node-kind= left kind)
        (node-kind= right kind)))
 
+(defmacro %%make-infix-operator (operator &optional booleanp)
+  `(let* ((function (symbol-function ,operator))
+          (left-value (second left))
+          (right-value (second right))
+          (result (funcall function left-value right-value)))
+     (if ,booleanp (boolean-to-object result) (list :integer result))))
+
+(defmacro %%make-infix-operator-map (map &key bools)
+  `(alexandria:switch (operator :test #'equal)
+     ,@(loop :for (fun &key name) :in map
+             :for stringy := (or name (string fun))
+             :for boolp := `(member ',fun ,bools)
+             :collect `(,stringy (%%make-infix-operator ',fun ,boolp)))
+     (t (error "Unknown operator ~A ~A ~A" (first left) operator (first right)))))
+
 (defun %evaluate-integer-infix-expression (operator left right)
-  (macrolet ((make-operator (operator &optional bool)
-               `(let* ((function (symbol-function ,operator))
-                       (left-value (second left))
-                       (right-value (second right))
-                       (result (funcall function left-value right-value)))
-                  (if ,bool (boolean-to-object result) (list :integer result))))
-             (make-operator-map (map)
-               `(alexandria:switch (operator :test #'equal)
-                  ,@(loop :for (string function &optional boolean) :in map
-                          :collect `(,string (make-operator ,function ,boolean)))
-                  (t (error "Unknown operator ~A ~A ~A"
-                            (first left) operator (first right))))))
-    ;; NOTE: We can do better than this, but this'll do great for now.
-    (make-operator-map (("+" '+) ("-" '-) ("*" '*) ("/" '/)
-                        ("<" '< t) ("<=" '<= t)
-                        (">" '> t) (">=" '>= t)
-                        ("==" '= t) ("!=" '/= t)))))
+  (%%make-infix-operator-map ((+) (-) (*) (/)
+                              (<) (<=) (>) (>=)
+                              (= :name "==") (/= :name "!="))
+                             :bools '(< <= > >= = /=)))
 
 (defun evaluate-infix-expression (operator left right env)
   (let ((left (evaluate left env))
