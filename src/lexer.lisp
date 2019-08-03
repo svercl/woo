@@ -75,8 +75,7 @@
 
 (defmethod print-object ((lexer lexer) stream)
   (print-unreadable-object (lexer stream :type t)
-    (with-slots (current) lexer
-      (princ current stream))))
+    (print (lexer-current lexer) stream)))
 
 (defun make-lexer (text)
   (make-instance 'lexer :text text))
