@@ -96,10 +96,9 @@
        (node-kind= right kind)))
 
 (defmacro %%make-infix-operator (operator &optional booleanp)
-  `(let* ((function (symbol-function ,operator))
-          (left-value (second left))
+  `(let* ((left-value (second left))
           (right-value (second right))
-          (result (funcall function left-value right-value)))
+          (result (funcall ,operator left-value right-value)))
      (if ,booleanp (boolean-to-object result) (list :integer result))))
 
 (defmacro %%make-infix-operator-map (map &key bools)
@@ -111,8 +110,7 @@
      (t (error "Unknown operator ~A ~A ~A" (first left) operator (first right)))))
 
 (defun %evaluate-integer-infix-expression (operator left right)
-  (%%make-infix-operator-map ((+) (-) (*) (/)
-                              (<) (<=) (>) (>=)
+  (%%make-infix-operator-map ((+) (-) (*) (/) (<) (<=) (>) (>=)
                               (= :name "==") (/= :name "!="))
                              :bools '(< <= > >= = /=)))
 
