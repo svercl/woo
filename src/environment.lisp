@@ -20,14 +20,14 @@
   (macrolet ((builtin (name &body body)
                `(set-in env ,name (list :builtin #'(lambda (args) ,@body)))))
     (builtin "len"
-      (trivia:match (first args)
-        ((or (list :array value)
-             (list :string value))
-         (length value))
-        (_ (error "Not supported"))))
+             (trivia:match (first args)
+               ((or (list :array value)
+                    (list :string value))
+                (length value))
+               (_ (error "Not supported"))))
     (builtin "puts"
-      (princ (mapc #'inspect-object args))
-      +null-object+)
+             (mapc #'(lambda (arg) (inspect-object arg)) args)
+             +null-object+)
     (builtin "first" (first args))))
 
 (defmethod get-from ((environment environment) (name string))
