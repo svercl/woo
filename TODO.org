@@ -23,8 +23,9 @@ It is because the minus operator is always considered to be prefix
 ** DONE Call expressions
 ** DONE Fix ~parse-function-parameters~
 ** DONE Fix ~parse-function-literal~
-** TODO Fix ~parse-expression-list~
+** DONE Fix ~parse-expression-list~
 It does not collect the last expression
 It is also an infinite loop
 ** TODO Do not signal errors from lisp
+Or at least catch them in the main loop
 ** TODO Signal an error in ~parse-expression~ when we can't find a prefix

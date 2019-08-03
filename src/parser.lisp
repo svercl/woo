@@ -63,7 +63,6 @@
 
 (defmethod next ((parser parser) &optional (amount 1))
   "Advance the PARSER."
-  (check-type amount integer)
   (assert (>= amount 1))
   (with-accessors ((lexer parser-lexer)
                    (current parser-current)
@@ -162,12 +161,12 @@
     (:function #'parse-function-literal)
     (:left-bracket #'parse-array-literal)))
 
-(serapeum:-> parse-expression (parser &optional keyword) list)
 (defun parse-expression (parser &optional (precedence :lowest))
   "The meat of parsing. Decides whether to parse prefix or infix."
-  (loop :with expression := (alexandria:when-let
+  (loop :with expression := (alexandria:if-let
                                 (prefix (prefix-parser-for (current-kind parser)))
-                              (funcall prefix parser))
+                              (funcall prefix parser)
+                              (return nil))
         :for peek-precedence := (peek-precedence parser)
         :while (and (peek-kind/= parser :semicolon)
                     (precedence< precedence peek-precedence))
@@ -278,8 +277,8 @@
 (defun parse-expression-list (parser &optional (end-kind :right-paren) (delimiter-kind :comma))
   (when-do (peek-kind/= parser end-kind)
       (loop :for expression := (parse-expression parser)
-            :while (peek-kind= parser delimiter-kind)
             :collect expression :into expressions
+            :while (peek-kind= parser delimiter-kind)
             :do (next parser 2)
             :finally (expect-peek parser end-kind)
                      (return expressions))
