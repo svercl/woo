@@ -103,8 +103,7 @@
   (loop :with start := (lexer-position lexer)
         :for position := (lexer-position lexer)
         :for current := (lexer-current lexer)
-        :while (or (null current)
-                   (funcall pred current))
+        :while (or (null current) (funcall pred current))
         :do (advance lexer)
         :finally (return (or no-start (subseq (lexer-text lexer) start position)))))
 
@@ -115,11 +114,12 @@
   (flet ((read-identifier ()
            (flet ((valid (char)
                     (or (alphanumericp char)
-                        (member char '(#\- #\_ #\!)))))
+                        (member char '(#\+ #\- #\_ #\!)))))
              (collect-while lexer #'valid)))
          (read-integer ()
            (collect-while lexer #'digit-char-p))
          (read-string ()
+           (advance lexer) ; #\"
            (flet ((valid (char)
                     (and (alphanumericp char)
                          (char/= char #\"))))
@@ -142,8 +142,7 @@
                    (advance lexer))
                  (token simple (string current))))
             ((char= current #\")
-             (progn (advance lexer) ; #\"
-                    (token :string (read-string))))
+             (token :string (read-string)))
             ((digit-char-p current)
              (token :integer (read-integer) nil))
             ((alpha-char-p current)
