@@ -38,7 +38,8 @@
     ((list :if-expression _ condition consequence alternative) (evaluate-if-expression condition consequence alternative env))
     ((list :identifier _ value) (evaluate-identifier value env))
     ((list :call-expression _ left arguments) (evaluate-call-expression left arguments env))
-    ((list :index-expression _ left index) (evaluate-index-expression left index env))))
+    ((list :index-expression _ left index) (evaluate-index-expression left index env))
+    (_ +null-object+)))
 
 (defun evaluate-program (statements env)
   (loop :for statement :in statements
