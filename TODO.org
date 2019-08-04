@@ -18,6 +18,7 @@ It is because the minus operator is always considered to be prefix
 ** TODO Print blocks correctly
 ** TODO Fix ~inspect-object~ for function
 ** TODO Indexing strings
+** TODO Check that ~index~ is a valid integer when indexing
 * Parser
 ** DONE Use ~position~ instead for precedence table
 ** DONE Call expressions

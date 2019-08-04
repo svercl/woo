@@ -9,6 +9,21 @@
 (defun node-kind (node)
   (first node))
 
+(defun node-kind= (node kind)
+  (eq (node-kind node) kind))
+
+(defun node-kind=2 (left right kind)
+  (and (node-kind= left kind)
+       (node-kind= right kind)))
+
+(defun boolean-to-object (test)
+  (if test +true-object+ +false-object+))
+
+(defun truthyp (node)
+  (trivia:match node
+    ((or +null-object+ +false-object+) nil)
+    (_ t)))
+
 (defun inspect-object (node)
   (trivia:match node
     ((or (list :integer value)
@@ -36,7 +51,7 @@
     ((list :prefix-expression _ operator right) (evaluate-prefix-expression operator right env))
     ((list :infix-expression _ operator left right) (evaluate-infix-expression operator left right env))
     ((list :if-expression _ condition consequence alternative) (evaluate-if-expression condition consequence alternative env))
-    ((list :identifier _ value) (evaluate-identifier value env))
+    ((list :identifier _ value) (get-from env value))
     ((list :call-expression _ left arguments) (evaluate-call-expression left arguments env))
     ((list :index-expression _ left index) (evaluate-index-expression left index env))
     (_ +null-object+)))
@@ -70,31 +85,12 @@
 
 (defun evaluate-prefix-expression (operator right env)
   (let ((right (evaluate right env)))
-    (flet ((bang-operator ()
-             (trivia:match right
-               ((or +false-object+ +null-object+) +true-object+)
-               (_ +false-object+)))
-           (minus-operator ()
-             (list :integer (- (second right)))))
-      (alexandria:switch (operator :test #'equal)
-        ("!" (bang-operator))
-        ("-" (minus-operator))
-        (t (error "Unknown operator ~A~A" operator right))))))
-
-(defun boolean-to-object (test)
-  (if test +true-object+ +false-object+))
-
-(defun truthyp (node)
-  (trivia:match node
-    ((or +null-object+ +false-object+) nil)
-    (_ t)))
-
-(defun node-kind= (node kind)
-  (eq (node-kind node) kind))
-
-(defun node-kind=2 (left right kind)
-  (and (node-kind= left kind)
-       (node-kind= right kind)))
+    (alexandria:switch (operator :test #'equal)
+      ("!" (trivia:match right
+             ((or +false-object+ +null-object+) +true-object+)
+             (_ +false-object+)))
+      ("-" (list :integer (- (second right))))
+      (t (error "Unknown operator ~A~A" operator right)))))
 
 (defmacro make-infix-operator (operator &optional boolp)
   `(let* ((left-value (second left))
@@ -132,9 +128,6 @@
           ((listp alternative) (evaluate alternative env))
           (t +null-object+))))
 
-(defun evaluate-identifier (value env)
-  (get-from env value))
-
 (defun evaluate-call-expression (left arguments env)
   (let ((function (evaluate left env))
         (arguments (evaluate-expressions arguments env)))
@@ -155,7 +148,6 @@
   (let ((left (evaluate left env))
         (index (evaluate index env)))
     (trivia:match left
-      ;; Check that ~index~ is actually an :integer
       ((list :array elements)
        (or (nth (second index) elements) +null-object+))
       (_ (error "Index operator not supported for ~A"
