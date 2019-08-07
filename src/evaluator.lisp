@@ -152,9 +152,9 @@
                 (node-kind left))))))
 
 (defun unwrap-return-value (node)
-  (if (node-kind= node :return-value)
-      (second node)
-      node))
+  (trivia:match node
+    ((list :return-value value) value)
+    (_ node)))
 
 (defun evaluate-expressions (expressions env)
   (mapcar #'(lambda (expression)
