@@ -10,6 +10,13 @@
           :initarg :outer
           :type (or null environment))))
 
+(defmethod print-object ((object environment) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (with-slots (store) object
+      (loop :for key :being :the :hash-keys :of store
+              :using (hash-value value)
+            :do (format stream "~S => ~S~&" key value)))))
+
 (defun make-environment (&optional outer)
   (make-instance 'environment :outer outer))
 
