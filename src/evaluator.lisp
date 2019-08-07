@@ -9,12 +9,9 @@
 (defun node-kind (node)
   (first node))
 
-(defun node-kind= (node kind)
-  (eq (node-kind node) kind))
-
-(defun node-kind=2 (left right kind)
-  (and (node-kind= left kind)
-       (node-kind= right kind)))
+(defun node-kind= (kind &rest nodes)
+  (loop :for node :in nodes
+        :always (eq kind (node-kind node))))
 
 (defun boolean-to-object (test)
   (if test +true-object+ +false-object+))
@@ -26,8 +23,7 @@
 
 (defun inspect-object (node)
   (trivia:match node
-    ((or (list :integer value)
-         (list :boolean value))
+    ((or (list :integer value) (list :boolean value))
      (write-to-string value))
     ((list :return-value value)
      (inspect-object value))
@@ -59,15 +55,15 @@
 (defun evaluate-program (statements env)
   (loop :for statement :in statements
         :for result := (evaluate statement env)
-        :when (node-kind= result :return-value)
+        :when (node-kind= :return-value result)
           :do (return (second result))
         :finally (return result)))
 
 (defun evaluate-block-statement (statements env)
   (loop :for statement :in statements
         :for result := (evaluate statement env)
-        :until (or (node-kind= result :return-value)
-                   (node-kind= result :error))
+        :until (or (node-kind= :return-value result)
+                   (node-kind= :error result))
         :finally (return result)))
 
 (defun evaluate-return-statement (expression env)
@@ -114,13 +110,15 @@
 (defun evaluate-infix-expression (operator left right env)
   (let ((left (evaluate left env))
         (right (evaluate right env)))
-    (if (node-kind=2 left right :integer)
-        (evaluate-integer-infix-expression operator left right)
-        (alexandria:switch (operator :test #'equal)
-          ("==" (boolean-to-object (equal left right)))
-          ("!=" (boolean-to-object (not (equal left right))))
-          (t (error "Unknown operator ~A ~A ~A"
-                    (node-kind left) operator (node-kind right)))))))
+    (cond ((node-kind= :integer left right)
+           (evaluate-integer-infix-expression operator left right))
+          ((node-kind= :string left right)
+           (list :string (concatenate 'string (second left) (second right))))
+          (t (alexandria:switch (operator :test #'equal)
+               ("==" (boolean-to-object (equal left right)))
+               ("!=" (boolean-to-object (not (equal left right))))
+               (t (error "Unknown operator ~A ~A ~A"
+                         (node-kind left) operator (node-kind right))))))))
 
 (defun evaluate-if-expression (condition consequence alternative env)
   (let ((condition (evaluate condition env)))
@@ -134,9 +132,9 @@
     (trivia:match function
       ((list :function parameters env body)
        (let* ((extended-env (loop :with inner := (make-environment env)
-                                  :for parameter :in parameters
+                                  :for parameter :in parameters ; identifier
                                   :for argument :in arguments
-                                  :do (set-in inner parameter argument)
+                                  :do (set-in inner (third parameter) argument)
                                   :finally (return inner)))
               (result (evaluate body extended-env)))
          (unwrap-return-value result)))
