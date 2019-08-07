@@ -123,7 +123,7 @@
 (defun evaluate-if-expression (condition consequence alternative env)
   (let ((condition (evaluate condition env)))
     (cond ((truthyp condition) (evaluate consequence env))
-          ((listp alternative) (evaluate alternative env))
+          ((serapeum:true alternative) (evaluate alternative env))
           (t +null-object+))))
 
 (defun evaluate-call-expression (left arguments env)
