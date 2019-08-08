@@ -6,7 +6,7 @@
   :license "MIT"
   :homepage "https://github.com/bsvercl/woo"
   :version "0.1.0"
-  :depends-on ("alexandria" "serapeum" "trivia")
+  :depends-on ("alexandria" "serapeum" "trivia" "iterate")
   :components ((:module "src"
                 :serial t
                 :components
