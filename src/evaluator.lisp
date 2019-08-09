@@ -94,6 +94,7 @@ if that is so, then we bail and return that."
     (list :array elements)))
 
 (defun evaluate-prefix-expression (operator right env)
+  "operator right where operator is a prefix and right is an expression."
   (let ((right (evaluate right env)))
     (alexandria:switch (operator :test #'equal)
       ("!" (trivia:match right
@@ -119,6 +120,7 @@ if that is so, then we bail and return that."
        (t (error "Unknown operator ~A ~A ~A" (first left) operator (first right))))))
 
 (defun evaluate-infix-expression (operator left right env)
+  "left operator right where left, right are expressions, and operator is a string designating a function."
   (let ((left (evaluate left env))
         (right (evaluate right env)))
     (cond ((node-kind= :integer left right)
@@ -137,12 +139,14 @@ if that is so, then we bail and return that."
                          (node-kind left) operator (node-kind right))))))))
 
 (defun evaluate-if-expression (condition consequence alternative env)
+  "Conditionally execute consequence or alternative based on truthyness of condition."
   (let ((condition (evaluate condition env)))
     (cond ((truthyp condition) (evaluate consequence env))
           ((serapeum:true alternative) (evaluate alternative env))
           (t +null-object+))))
 
 (defun extend-function-environment (arguments parameters env)
+  "Set parameter to argument in env."
   (iterate:iter
     (iterate:with inner = (make-environment env))
     (iterate:for (nil nil parameter-name) in parameters)
@@ -151,6 +155,7 @@ if that is so, then we bail and return that."
     (iterate:finally (return inner))))
 
 (defun evaluate-call-expression (left arguments env)
+  "left(arguments) where left is a function."
   (let ((function (evaluate left env))
         (arguments (evaluate-expressions arguments env)))
     (trivia:match function
@@ -163,6 +168,7 @@ if that is so, then we bail and return that."
       (_ (error "Not a function: ~A" function)))))
 
 (defun evaluate-index-expression (left index env)
+  "left[index] = object at index in left where left is an array, and index is an expression."
   (let ((left (evaluate left env))
         (index (evaluate index env)))
     (trivia:match left
@@ -175,11 +181,13 @@ if that is so, then we bail and return that."
                 (node-kind left))))))
 
 (defun unwrap-return-value (node)
+  "When ~node~ is of kind return-value, get the value from it, otherwise return itself."
   (trivia:match node
     ((list :return-value value) value)
     (_ node)))
 
 (defun evaluate-expressions (expressions env)
+  "Evaluate all ~expressions~."
   (mapcar #'(lambda (expression)
               (evaluate expression env))
           expressions))
