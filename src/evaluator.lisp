@@ -10,8 +10,9 @@
   (first node))
 
 (defun node-kind= (kind &rest nodes)
-  (loop :for node :in nodes
-        :always (eq kind (node-kind node))))
+  (iterate:iter
+    (iterate:for node in nodes)
+    (iterate:always (eq kind (node-kind node)))))
 
 (defun boolean-to-object (test)
   (if test +true-object+ +false-object+))
@@ -53,11 +54,12 @@
     (_ +null-object+)))
 
 (defun evaluate-program (statements env)
-  (loop :for statement :in statements
-        :for result := (evaluate statement env)
-        :when (node-kind= :return-value result)
-          :do (return (second result))
-        :finally (return result)))
+  (iterate:iter
+    (iterate:for statement in statements)
+    (iterate:for result = (evaluate statement env))
+    (when (node-kind= :return-value result)
+      (iterate:leave (second result)))
+    (iterate:finally (return result))))
 
 (defun evaluate-block-statement (statements env)
   (iterate:iter

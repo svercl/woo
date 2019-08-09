@@ -109,11 +109,12 @@
     (next parser)))
 
 (defun parse-program (parser)
-  (loop :while (current-kind/= parser :eof)
-        :for statement := (parse-statement parser)
-        :collect statement :into statements
-        :do (next parser)
-        :finally (return (list :program statements))))
+  (iterate:iter
+    (iterate:while (current-kind/= parser :eof))
+    (iterate:for statement = (parse-statement parser))
+    (iterate:collect statement into statements)
+    (next parser)
+    (iterate:finally (return (list :program statements)))))
 
 (defun parse-statement (parser)
   (case (current-kind parser)
@@ -162,45 +163,42 @@
 
 (defun parse-expression (parser &optional (precedence :lowest))
   "The meat of parsing. Decides whether to parse prefix or infix."
-  (loop :with expression := (alexandria:if-let
-                                (prefix (prefix-parser-for (current-kind parser)))
-                              (funcall prefix parser)
-                              (return nil))
-        :for peek-precedence := (peek-precedence parser)
-        :while (and (peek-kind/= parser :semicolon)
-                    (precedence< precedence peek-precedence))
-        :when (member (peek-kind parser) +infix-kinds+)
-          :do (next parser)
-          :and :do (setf expression (parse-infix-expression parser expression))
-        :finally (return expression)))
+  (iterate:iter
+    (iterate:with expression = (alexandria:if-let
+                                   (prefix (prefix-parser-for (current-kind parser)))
+                                 (funcall prefix parser)
+                                 (error "Unknown prefix: ~A" (current-kind parser))))
+    (iterate:for peek-precedence = (peek-precedence parser))
+    (iterate:while (and (peek-kind/= parser :semicolon)
+                        (precedence< precedence peek-precedence)))
+    (when (member (peek-kind parser) +infix-kinds+)
+      (next parser)
+      (setf expression (parse-infix-expression parser expression)))
+    (iterate:finally (return expression))))
 
-(defun parse-identifier (parser)
-  (let* ((token (parser-current parser))
-         (value (token-literal token)))
-    (list :identifier token value)))
+(defmacro with-parser-token ((parser &key literal-name) &body body)
+  `(let* ((token (parser-current ,parser))
+          (,(or literal-name 'literal) (token-literal token)))
+     ,@body))
 
-(defun parse-integer-literal (parser)
-  (let* ((token (parser-current parser))
-         (value (parse-integer (token-literal token) :junk-allowed t)))
-    (list :integer-literal token value)))
+(defmacro define-simple-literal (name kind &key validator)
+  `(defun ,name (parser)
+     (with-parser-token (parser)
+       (list ,kind token (if ,validator (funcall ,validator literal) literal)))))
 
-(defun parse-string-literal (parser)
-  (let* ((token (parser-current parser))
-         (value (token-literal token)))
-    (list :string-literal token value)))
+(define-simple-literal parse-identifier :identifier)
+(define-simple-literal parse-integer-literal :integer-literal :validator #'parse-integer)
+(define-simple-literal string-literal :string-literal)
+(define-simple-literal boolean-literal :boolean-literal
+    :validator #'(lambda (literal)
+                   (declare (ignore literal))
+                   (current-kind/= parser :nil)))
 
 (defun parse-prefix-expression (parser)
-  (let* ((token (parser-current parser))
-         (operator (token-literal token)))
-    ;; skip prefix
+  (with-parser-token (parser :literal-name operator)
     (next parser)
     (let ((right (parse-expression parser :prefix)))
       (list :prefix-expression token operator right))))
-
-(defun parse-boolean-literal (parser)
-  (let* ((token (parser-current parser))
-         (value (current-kind/= parser :nil)))
-    (list :boolean-literal token value)))
 
 ;; "(" EXPRESSION ")"
 (defun parse-grouped-expression (parser)
@@ -229,12 +227,13 @@
   (let ((token (parser-current parser)))
     (expect-peek parser begin-kind)
     (next parser)
-    (loop :for kind := (current-kind parser)
-          :until (member kind (list end-kind :eof))
-          :for statement := (parse-statement parser)
-          :collect statement :into statements
-          :do (next parser) ; statement
-          :finally (return (list :block-statement token statements)))))
+    (iterate:iter
+      (iterate:for kind = (current-kind parser))
+      (iterate:until (member kind `(,end-kind :eof)))
+      (iterate:for statement = (parse-statement parser))
+      (iterate:collect statement into statements)
+      (next parser)
+      (iterate:finally (return (list :block-statement token statements))))))
 
 ;; "fn" FN-PARAMS BLOCK
 (defun parse-function-literal (parser)
@@ -282,12 +281,7 @@
       (progn (next parser) nil)
       (progn (next parser)
              (parse-list-using parser #'parse-expression :end-kind end-kind
-                                                         :delimiter-kind delimiter-kind)
-             #+nil(cons (parse-expression parser)
-                        (loop :while (peek-kind= parser delimiter-kind)
-                              :do (next parser 2)
-                              :collect (parse-expression parser)
-                              :finally (expect-peek parser end-kind))))))
+                                                         :delimiter-kind delimiter-kind))))
 
 (defun parse-call-expression (parser left)
   (let* ((token (parser-current parser))

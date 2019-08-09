@@ -99,12 +99,14 @@
 
 (defmethod collect-while ((lexer lexer) pred &key no-start)
   "Advance and collect the current character while PRED holds."
-  (loop :with start := (lexer-position lexer)
-        :for position := (lexer-position lexer)
-        :for current := (lexer-current lexer)
-        :while (or (null current) (funcall pred current))
-        :do (advance lexer)
-        :finally (return (or no-start (subseq (lexer-text lexer) start position)))))
+  (iterate:iter
+    (iterate:with start-position = (lexer-position lexer))
+    (iterate:for current-position = (lexer-position lexer))
+    (iterate:for current = (lexer-current lexer))
+    (iterate:while (or (null current) (funcall pred current)))
+    (advance lexer)
+    (iterate:finally (return (or no-start
+                                 (subseq (lexer-text lexer) start-position current-position))))))
 
 (defmethod skip-whitespace ((lexer lexer))
   (collect-while lexer #'serapeum:whitespacep :no-start t))
