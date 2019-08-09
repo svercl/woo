@@ -116,6 +116,7 @@ if that is so, then we bail and return that."
        ,@(iterate:iter
            (iterate:for (fun &key name) in map)
            (iterate:for stringy = (or name (string fun)))
+           ;; FIXME: Insert the result of boolp into the collection, not verbatim.
            (iterate:for boolp = `(member ',fun ,bools))
            (iterate:collect `(,stringy (make-infix-operator ',fun ,boolp))))
        (t (error "Unknown operator ~A ~A ~A" (first left) operator (first right))))))
