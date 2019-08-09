@@ -11,7 +11,7 @@
           :type (or null environment))))
 
 (defmethod print-object ((object environment) stream)
-  (print-unreadable-object (object stream :type t :identity t)
+  (print-unreadable-object (object stream :type t)
     (with-slots (store) object
       (iterate:iter
         (iterate:for (key value) in-hashtable store)
@@ -30,10 +30,10 @@
              (trivia:match (first args)
                ((or (list :array value)
                     (list :string value))
-                (length value))
+                (list :integer (length value)))
                (_ (error "Not supported"))))
     (builtin "puts"
-             (mapc #'(lambda (arg) (inspect-object arg)) args)
+             (mapc #'inspect-object args)
              +null-object+)
     (builtin "first" (first args))))
 

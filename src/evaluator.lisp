@@ -135,11 +135,12 @@
         (arguments (evaluate-expressions arguments env)))
     (trivia:match function
       ((list :function parameters env body)
-       (let* ((extended-env (loop :with inner := (make-environment env)
-                                  :for parameter :in parameters ; identifier
-                                  :for argument :in arguments
-                                  :do (set-in inner (third parameter) argument)
-                                  :finally (return inner)))
+       (let* ((extended-env (iterate:iter
+                              (iterate:with inner = (make-environment env))
+                              (iterate:for (nil nil parameter-name) in parameters)
+                              (iterate:for argument in arguments)
+                              (set-in inner parameter-name argument)
+                              (iterate:finally (return inner))))
               (result (evaluate body extended-env)))
          (unwrap-return-value result)))
       ((list :builtin lam)
