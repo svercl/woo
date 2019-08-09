@@ -60,11 +60,12 @@
         :finally (return result)))
 
 (defun evaluate-block-statement (statements env)
-  (loop :for statement :in statements
-        :for result := (evaluate statement env)
-        :until (or (node-kind= :return-value result)
-                   (node-kind= :error result))
-        :finally (return result)))
+  (iterate:iter
+    (iterate:for statement in statements)
+    (iterate:for result = (evaluate statement env))
+    (iterate:until (or (node-kind= :return-value result)
+                       (node-kind= :error result)))
+    (iterate:finally ())))
 
 (defun evaluate-return-statement (expression env)
   (alexandria:when-let (value (evaluate expression env))
@@ -95,16 +96,17 @@
      (if ,boolp (boolean-to-object result) (list :integer result))))
 
 (defmacro make-infix-operator-map (map &key bools)
-  `(alexandria:switch (operator :test #'equal)
-     ,@(loop :for (fun &key name) :in map
-             :for stringy := (or name (string fun))
-             :for boolp := `(member ',fun ,bools)
-             :collect `(,stringy (make-infix-operator ',fun ,boolp)))
-     (t (error "Unknown operator ~A ~A ~A" (first left) operator (first right)))))
+  (let ((map (mapcar #'alexandria:ensure-list map)))
+    `(alexandria:switch (operator :test #'equal)
+       ,@(iterate:iter
+           (iterate:for (fun &key name) in map)
+           (iterate:for stringy = (or name (string fun)))
+           (iterate:for boolp = `(member ',fun ,bools))
+           (iterate:collect `(,stringy (make-infix-operator ',fun ,boolp))))
+       (t (error "Unknown operator ~A ~A ~A" (first left) operator (first right))))))
 
 (defun evaluate-integer-infix-expression (operator left right)
-  (make-infix-operator-map ((+) (-) (*) (/) (<) (<=) (>) (>=)
-                            (= :name "==") (/= :name "!="))
+  (make-infix-operator-map (+ - * / < <= > >= (= :name "==") (/= :name "!="))
                            :bools '(< <= > >= = /=)))
 
 (defun evaluate-infix-expression (operator left right env)
