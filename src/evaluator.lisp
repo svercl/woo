@@ -67,7 +67,7 @@
     (iterate:for result = (evaluate statement env))
     (iterate:until (or (node-kind= :return-value result)
                        (node-kind= :error result)))
-    (iterate:finally ())))
+    (iterate:finally (return result))))
 
 (defun evaluate-return-statement (expression env)
   (alexandria:when-let (value (evaluate expression env))
