@@ -37,7 +37,8 @@
      (format nil "[~{~A~^, ~}]" (mapcar #'inspect-object elements)))
     ((list :null) "null")
     ((list :function _ _ _) "<function>")
-    (_ (format nil "something else ~A" (node-kind node)))))
+    ((list :string value) value)
+    (_ (format nil "something else (~A)" (node-kind node)))))
 
 (defun evaluate (node env)
   "Do stuff with ~node~ using the environment ~env~."
@@ -128,7 +129,9 @@ if that is so, then we bail and return that."
                                     :bools '(< <= > >= = /=)))
           ((node-kind= :string left right)
            (make-infix-operator-map ((string< :name "<")
+                                     (string<= :name "<=")
                                      (string> :name ">")
+                                     (string>= :name ">=")
                                      (string= :name "==")
                                      (string/= :name "!="))
                                     :bools '(string< string> string= string/=)))

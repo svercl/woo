@@ -33,7 +33,11 @@
                 (list :integer (length value)))
                (_ (error "Not supported"))))
     (builtin "puts"
-             (mapc #'inspect-object args)
+             (mapcar #'(lambda (arg)
+                         (princ (inspect-object arg))
+                         (terpri))
+                     args)
+             (fresh-line)
              +null-object+)
     (builtin "first" (first args))))
 
