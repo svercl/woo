@@ -121,7 +121,8 @@ if that is so, then we bail and return that."
        (t (error "Unknown operator ~A ~A ~A" (first left) operator (first right))))))
 
 (defun evaluate-infix-expression (operator left right env)
-  "left operator right where left, right are expressions, and operator is a string designating a function."
+  "left operator right where left, right are expressions, and
+operator is a string designating a function."
   (let ((left (evaluate left env))
         (right (evaluate right env)))
     (cond ((node-kind= :integer left right)
@@ -168,7 +169,7 @@ if that is so, then we bail and return that."
          (unwrap-return-value result)))
       ((list :builtin lam)
        (funcall lam arguments))
-      (_ (error "Not a function: ~A" function)))))
+      (_ (error "~A is not a function." (node-kind function))))))
 
 (defun evaluate-index-expression (left index env)
   "left[index] = object at index in left where left is an array, and index is an expression."
