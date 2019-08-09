@@ -107,17 +107,18 @@
            (iterate:collect `(,stringy (make-infix-operator ',fun ,boolp))))
        (t (error "Unknown operator ~A ~A ~A" (first left) operator (first right))))))
 
-(defun evaluate-integer-infix-expression (operator left right)
-  (make-infix-operator-map (+ - * / < <= > >= (= :name "==") (/= :name "!="))
-                           :bools '(< <= > >= = /=)))
-
 (defun evaluate-infix-expression (operator left right env)
   (let ((left (evaluate left env))
         (right (evaluate right env)))
     (cond ((node-kind= :integer left right)
-           (evaluate-integer-infix-expression operator left right))
+           (make-infix-operator-map (+ - * / < <= > >= (= :name "==") (/= :name "!="))
+                                    :bools '(< <= > >= = /=)))
           ((node-kind= :string left right)
-           (list :string (concatenate 'string (second left) (second right))))
+           (make-infix-operator-map ((string< :name "<")
+                                     (string> :name ">")
+                                     (string= :name "==")
+                                     (string/= :name "!="))
+                                    :bools '(string< string> string= string/=)))
           (t (alexandria:switch (operator :test #'equal)
                ("==" (boolean-to-object (equal left right)))
                ("!=" (boolean-to-object (not (equal left right))))
@@ -130,17 +131,20 @@
           ((serapeum:true alternative) (evaluate alternative env))
           (t +null-object+))))
 
+(defun extend-function-environment (arguments parameters env)
+  (iterate:iter
+    (iterate:with inner = (make-environment env))
+    (iterate:for (nil nil parameter-name) in parameters)
+    (iterate:for argument in arguments)
+    (set-in inner parameter-name argument)
+    (iterate:finally (return inner))))
+
 (defun evaluate-call-expression (left arguments env)
   (let ((function (evaluate left env))
         (arguments (evaluate-expressions arguments env)))
     (trivia:match function
       ((list :function parameters env body)
-       (let* ((extended-env (iterate:iter
-                              (iterate:with inner = (make-environment env))
-                              (iterate:for (nil nil parameter-name) in parameters)
-                              (iterate:for argument in arguments)
-                              (set-in inner parameter-name argument)
-                              (iterate:finally (return inner))))
+       (let* ((extended-env (extend-function-environment arguments parameters env))
               (result (evaluate body extended-env)))
          (unwrap-return-value result)))
       ((list :builtin lam)
@@ -152,7 +156,10 @@
         (index (evaluate index env)))
     (trivia:match left
       ((list :array elements)
-       (or (nth (second index) elements) +null-object+))
+       (trivia:match index
+         ((list :index index)
+          (or (nth index elements) +null-object+))
+         (t (error "Not an index ~A" (node-kind index)))))
       (_ (error "Index operator not supported for ~A"
                 (node-kind left))))))
 
