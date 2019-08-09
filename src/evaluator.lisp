@@ -7,22 +7,27 @@
 (defparameter +null-object+ '(:null))
 
 (defun node-kind (node)
+  "The first element is always the kind. e.g. (:program statements) (:integer integer)"
   (first node))
 
 (defun node-kind= (kind &rest nodes)
+  "Check if ~nodes~ are of ~kind~."
   (iterate:iter
     (iterate:for node in nodes)
     (iterate:always (eq kind (node-kind node)))))
 
 (defun boolean-to-object (test)
+  "Converts native ~test~ boolean into an object our evaluator can use."
   (if test +true-object+ +false-object+))
 
 (defun truthyp (node)
+  "Everything that is not null or false is true. This does that."
   (trivia:match node
     ((or +null-object+ +false-object+) nil)
     (_ t)))
 
 (defun inspect-object (node)
+  "Attempt to stringify ~node~ into something human readable."
   (trivia:match node
     ((or (list :integer value) (list :boolean value))
      (write-to-string value))
@@ -31,9 +36,11 @@
     ((list :array elements)
      (format nil "[~{~A~^, ~}]" (mapcar #'inspect-object elements)))
     ((list :null) "null")
-    ((list :function _ _ _) "<function>")))
+    ((list :function _ _ _) "<function>")
+    (_ (format nil "something else ~A" (node-kind node)))))
 
 (defun evaluate (node env)
+  "Do stuff with ~node~ using the environment ~env~."
   (trivia:match node
     ((list :program statements) (evaluate-program statements env))
     ((list :block-statement _ statements) (evaluate-block-statement statements env))
@@ -58,10 +65,12 @@
     (iterate:for statement in statements)
     (iterate:for result = (evaluate statement env))
     (when (node-kind= :return-value result)
-      (iterate:leave (second result)))
+      (return (second result)))
     (iterate:finally (return result))))
 
 (defun evaluate-block-statement (statements env)
+  "Evaluate each statement in ~statements~ until we hit a return-value or error,
+if that is so, then we bail and return that."
   (iterate:iter
     (iterate:for statement in statements)
     (iterate:for result = (evaluate statement env))
@@ -70,10 +79,12 @@
     (iterate:finally (return result))))
 
 (defun evaluate-return-statement (expression env)
+  "Evaluate expression and attach it to a return-value object."
   (alexandria:when-let (value (evaluate expression env))
     (list :return-value value)))
 
 (defun evaluate-let-statement (identifier expression env)
+  "Set idenfitier to expression in the env."
   (alexandria:when-let (value (evaluate expression env))
     (let ((name (third identifier)))
       (set-in env name value))))
