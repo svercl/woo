@@ -2,6 +2,8 @@
 
 (in-package :woo)
 
+;; FIXME: Combine +builtins+ and +tokens+
+
 (defparameter +builtins+
   (alexandria:alist-hash-table
    '(("fn" . :function)
@@ -100,7 +102,8 @@
     (iterate:with start-position = (lexer-position lexer))
     (iterate:for current-position = (lexer-position lexer))
     (iterate:for current = (lexer-current lexer))
-    (iterate:while (or (null current) (funcall pred current)))
+    (iterate:while (or (null current)
+                       (funcall pred current)))
     (advance lexer)
     (iterate:finally (return (or no-start
                                  (subseq (lexer-text lexer) start-position current-position))))))
