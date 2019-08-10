@@ -138,7 +138,8 @@ operator is a string designating a function."
   (let ((left (evaluate left env))
         (right (evaluate right env)))
     (cond ((node-kind= :integer left right)
-           (make-infix-operator-map (+ - * / < <= > >= (= :name "==") (/= :name "!="))
+           (make-infix-operator-map (+ - * / < <= > >=
+                                       (mod :name "%") (= :name "==") (/= :name "!="))
                                     :bools '(< <= > >= = /=)))
           ((node-kind= :string left right)
            (make-infix-operator-map ((string< :name "<")

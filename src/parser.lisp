@@ -20,11 +20,12 @@
     (:minus . :sum)
     (:star . :product)
     (:slash . :product)
+    (:percent . :product)
     (:left-paren . :call)
     (:left-bracket . :index)))
 
 (defparameter +infix-kinds+
-  '(:plus :minus :star :slash
+  '(:plus :minus :star :slash :percent
     :equal :not-equal
     :less-than :less-equal :greater-than :greater-equal
     :left-paren :left-bracket))
