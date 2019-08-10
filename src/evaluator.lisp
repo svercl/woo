@@ -29,15 +29,26 @@
 (defun inspect-object (node)
   "Attempt to stringify ~node~ into something human readable."
   (trivia:match node
-    ((or (list :integer value) (list :boolean value))
+    ((or (list :integer value)
+         (list :boolean value)
+         (list :integer-literal _ value)
+         (list :boolean-literal _ value))
      (write-to-string value))
+    ((list :identifier _ value) value)
     ((list :return-value value)
      (inspect-object value))
     ((list :array elements)
      (format nil "[~{~A~^, ~}]" (mapcar #'inspect-object elements)))
     ((list :null) "null")
-    ((list :function _ _ _) "<function>")
+    ((list :function parameters _ body)
+     (format nil "function(~{~A~^, ~}) { ~A }"
+             (mapcar #'inspect-object parameters)
+             (inspect-object body)))
     ((list :string value) value)
+    ((list :block-statement _ statements)
+     (format nil "~{~A~}" (mapcar #'inspect-object statements)))
+    ((list :return-statement _ expression)
+     (concatenate 'string "return " (inspect-object expression) ";"))
     (_ (format nil "something else (~A)" (node-kind node)))))
 
 (defun evaluate (node env)
