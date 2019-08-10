@@ -125,7 +125,7 @@
 ;; "let" IDENTIFIER "=" EXPRESSION ?";"
 (defun parse-let-statement (parser)
   (let ((token (parser-current parser)))
-    (expect-peek parser :identifier) ; "let"
+    (expect-peek parser :identifier)
     (let ((identifier (parse-identifier parser)))
       (expect-peek parser :assign) ; "="
       (next parser)
@@ -154,7 +154,7 @@
     (:identifier #'parse-identifier)
     (:integer #'parse-integer-literal)
     ((:bang :minus) #'parse-prefix-expression)
-    ((:t :nil) #'parse-boolean-literal)
+    ((:true :false) #'parse-boolean-literal)
     (:string #'parse-string-literal)
     (:left-paren #'parse-grouped-expression)
     (:if #'parse-if-expression)
@@ -193,7 +193,7 @@
 (define-simple-literal parse-boolean-literal :boolean-literal
   :validator #'(lambda (literal)
                  (declare (ignore literal))
-                 (current-kind/= parser :nil)))
+                 (current-kind/= parser :false)))
 
 (defun parse-prefix-expression (parser)
   (with-parser-token (parser :literal-name operator)

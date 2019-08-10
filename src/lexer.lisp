@@ -6,15 +6,13 @@
 
 (defparameter +builtins+
   (alexandria:alist-hash-table
-   '(("fn" . :function)
+   '(("function" . :function)
      ("elif" . :elif)
      ("else" . :else)
-     ("t" . :t)
-     ("nil" . :nil)
+     ("true" . :true)
+     ("false" . :false)
      ("let" . :let)
-     ("return" . :return)
-     ("do" . :do)
-     ("end" . :end))
+     ("return" . :return))
    :test #'equal))
 
 (defparameter +tokens+
