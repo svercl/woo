@@ -188,8 +188,8 @@
 
 (define-simple-literal parse-identifier :identifier)
 (define-simple-literal parse-integer-literal :integer-literal :validator #'parse-integer)
-(define-simple-literal string-literal :string-literal)
-(define-simple-literal boolean-literal :boolean-literal
+(define-simple-literal parse-string-literal :string-literal)
+(define-simple-literal parse-boolean-literal :boolean-literal
     :validator #'(lambda (literal)
                    (declare (ignore literal))
                    (current-kind/= parser :nil)))
