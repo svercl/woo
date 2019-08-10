@@ -6,7 +6,7 @@
 
 (defparameter +builtins+
   (alexandria:alist-hash-table
-   '(("function" . :function)
+   '(("fn" . :function)
      ("elif" . :elif)
      ("else" . :else)
      ("true" . :true)
