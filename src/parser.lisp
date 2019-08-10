@@ -36,11 +36,11 @@
           :documentation "The token producer.")
    (current :accessor parser-current
             :initarg :current
-            :initform (make-token :illegal "illegal")
+            :initform (make-token :eof "eof")
             :type token
             :documentation "The token we are currently sitting on.")
    (peek :accessor parser-peek
-         :initform (make-token :illegal "illegal")
+         :initform (make-token :eof "eof")
          :type token
          :documentation "The token next to the current.")
    (errors :accessor parser-errors
