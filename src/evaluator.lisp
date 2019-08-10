@@ -176,14 +176,14 @@ operator is a string designating a function."
   "left[index] = object at index in left where left is an array, and index is an expression."
   (let ((left (evaluate left env))
         (index (evaluate index env)))
-    (trivia:match left
-      ((list :array elements)
-       (trivia:match index
-         ((list :index index)
+    (trivia:match index
+      ((list :index index)
+       (trivia:match left
+         ((list :array elements)
           (or (nth index elements) +null-object+))
-         (t (error "Not an index ~A" (node-kind index)))))
-      (_ (error "Index operator not supported for ~A"
-                (node-kind left))))))
+         (t (error "Index operator not supported for ~A"
+                   (node-kind left)))))
+      (t (error "Not an index ~A" (node-kind index))))))
 
 (defun unwrap-return-value (node)
   "When ~node~ is of kind return-value, get the value from it, otherwise return itself."

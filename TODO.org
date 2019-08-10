@@ -4,10 +4,10 @@
 Maybe use a readline type library?
 * Lexer
 ** DONE Strings
+** DONE I hate the way multiple character tokens are implemented
 ** TODO Handle different base numbers
 ** TODO Token positions
 ** TODO String escapes
-** TODO I hate the way multiple character tokens are implemented
 * Evaluator
 ** DONE Fix precedence
 ** DONE Use macros for infix integer expression
@@ -27,6 +27,6 @@ It is because the minus operator is always considered to be prefix
 ** DONE Fix ~parse-expression-list~
 It does not collect the last expression
 It is also an infinite loop
+** DONE Signal an error in ~parse-expression~ when we can't find a prefix
 ** TODO Do not signal errors from lisp
 Or at least catch them in the main loop
-** TODO Signal an error in ~parse-expression~ when we can't find a prefix
