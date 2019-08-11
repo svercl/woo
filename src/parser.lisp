@@ -64,7 +64,7 @@
 
 (defmethod next ((parser parser) &optional (amount 1))
   "Advance the PARSER."
-  (assert (>= amount 1))
+  (assert (>= amount 1) (amount) "Amount must be greater than or equal to one.")
   (with-accessors ((lexer parser-lexer)
                    (current parser-current)
                    (peek parser-peek))
