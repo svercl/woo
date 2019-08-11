@@ -105,7 +105,7 @@
   "Expect KIND, if so then advance PARSER, otherwise signal an error."
   (if (peek-kind= parser kind)
       (next parser)
-      (error "Expected ~A but got ~A" kind (peek-kind parser))))
+      (cerror "Expected ~A but got ~A" kind (peek-kind parser))))
 
 (defmethod current-precedence ((parser parser))
   (token-precedence (parser-current parser)))
@@ -169,15 +169,14 @@
     (:left-paren #'parse-grouped-expression)
     (:if #'parse-if-expression)
     (:function #'parse-function-literal)
-    (:left-bracket #'parse-array-literal)))
+    (:left-bracket #'parse-array-literal)
+    (:left-brace #'parse-hash-literal)
+    (t (error "Unknown prefix ~A" kind))))
 
 (defun parse-expression (parser &optional (precedence :lowest))
   "The meat of parsing. Decides whether to parse prefix or infix."
   (iterate:iter
-    (iterate:with expression = (alexandria:if-let
-                                   (prefix (prefix-parser-for (current-kind parser)))
-                                 (funcall prefix parser)
-                                 (error "Unknown prefix: ~A" (current-kind parser))))
+    (iterate:with expression = (funcall (prefix-parser-for (current-kind parser)) parser))
     (iterate:for peek-precedence = (peek-precedence parser))
     (iterate:while (and (peek-kind/= parser :semicolon)
                         (precedence< precedence peek-precedence)))
@@ -187,9 +186,10 @@
     (iterate:finally (return expression))))
 
 (defmacro with-parser-token ((parser &key literal-name) &body body)
-  `(let* ((token (parser-current ,parser))
-          (,(or literal-name 'literal) (token-literal token)))
-     ,@body))
+  (let ((name (or literal-name 'literal)))
+    `(let* ((token (parser-current ,parser))
+            (,name (token-literal token)))
+       ,@body)))
 
 (defmacro define-simple-literal (name kind &key validator)
   `(defun ,name (parser)
@@ -204,6 +204,23 @@
   :validator #'(lambda (literal)
                  (declare (ignore literal))
                  (current-kind/= parser :false)))
+
+(defun parse-hash-literal (parser)
+  (let ((token (parser-current parser)))
+    (iterate:iter
+      (iterate:with table = (make-hash-table))
+      (iterate:until (peek-kind= parser :right-brace))
+      (next parser)
+      (iterate:for key = (parse-expression parser))
+      (expect-peek parser :colon)
+      (next parser)
+      (iterate:for value = (parse-expression parser))
+      (setf (gethash key table) value)
+      ;; optional comma
+      (when (peek-kind= parser :comma)
+        (next parser))
+      (iterate:finally (progn (expect-peek parser :right-brace)
+                              (return (list :hash-literal token table)))))))
 
 (defun parse-prefix-expression (parser)
   (with-parser-token (parser :literal-name operator)

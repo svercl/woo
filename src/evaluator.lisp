@@ -130,7 +130,7 @@ if that is so, then we bail and return that."
            ;; FIXME: Insert the result of boolp into the collection, not verbatim.
            (iterate:for boolp = `(member ',fun ,bools))
            (iterate:collect `(,stringy (make-infix-operator ',fun ,boolp))))
-       (t (error "Unknown operator ~A ~A ~A" (first left) operator (first right))))))
+       (t (error "Unknown operator ~A ~A ~A" (node-kind left) operator (node-kind right))))))
 
 (defun evaluate-infix-expression (operator left right env)
   "left operator right where left, right are expressions, and
