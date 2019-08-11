@@ -41,7 +41,7 @@
      (format nil "[~{~A~^, ~}]" (mapcar #'inspect-object elements)))
     ((list :null) "null")
     ((list :function parameters _ body)
-     (format nil "function(~{~A~^, ~}) { ~A }"
+     (format nil "fn(~{~A~^, ~}) { ~A }"
              (mapcar #'inspect-object parameters)
              (inspect-object body)))
     ((list :string value) value)
