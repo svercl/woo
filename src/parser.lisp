@@ -5,7 +5,14 @@
 (defparameter +precedences+
   '(:lowest :equals :comparison :sum :product :prefix :call :index))
 
+(deftype precedence ()
+  `(member ,@+precedences+))
+
 (defun precedence< (this that)
+  (assert (and (typep this 'precedence)
+               (typep that 'precedence))
+          (this that)
+          "This and that must be keywords.")
   (< (position this +precedences+)
      (position that +precedences+)))
 
@@ -22,13 +29,15 @@
     (:slash . :product)
     (:percent . :product)
     (:left-paren . :call)
-    (:left-bracket . :index)))
+    (:left-bracket . :index))
+  "Tokens with precedences.")
 
 (defparameter +infix-kinds+
   '(:plus :minus :star :slash :percent
     :equal :not-equal
     :less-than :less-equal :greater-than :greater-equal
-    :left-paren :left-bracket))
+    :left-paren :left-bracket)
+  "Tokens which are infix. They appear between two expressions.")
 
 (defclass parser ()
   ((lexer :accessor parser-lexer
