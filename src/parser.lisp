@@ -9,10 +9,6 @@
   `(member ,@+precedences+))
 
 (defun precedence< (this that)
-  (assert (and (typep this 'precedence)
-               (typep that 'precedence))
-          (this that)
-          "This and that must be keywords.")
   (< (position this +precedences+)
      (position that +precedences+)))
 
